@@ -15,7 +15,7 @@ import {
   Heart,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, JSX } from "react";
 
 export default function HeroSection() {
   const ref = useRef(null);

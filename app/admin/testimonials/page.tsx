@@ -39,8 +39,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function TestimonialsPage() {
   const router = useRouter();
-  const [testimonials, setTestimonials] = useState([]);
-  const [themes, setThemes] = useState([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [themes, setThemes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 

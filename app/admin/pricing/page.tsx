@@ -106,7 +106,7 @@ const buttonStyleOptions = [
 
 export default function PricingPage() {
   const router = useRouter();
-  const [plans, setPlans] = useState([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Settings

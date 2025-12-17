@@ -23,9 +23,9 @@ import { Search, Filter, FolderKanban, X, Tag } from "lucide-react";
 
 export default function ThemesPage() {
   const router = useRouter();
-  const [themes, setThemes] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [tags, setTags] = useState([]);
+  const [themes, setThemes] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [tags, setTags] = useState<any[]>([]);
 
   // SEARCH & FILTER
   const [searchQuery, setSearchQuery] = useState("");
