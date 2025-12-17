@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Theme {
+  id        Int      @id @default(autoincrement())
+  name      String
+  image     String?
+  demoUrl   String
+  price     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories    ThemeCategory[]
+  tags          ThemeTag[]
+  testimonials  Testimonial[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  themes ThemeCategory[]
+}
+
+model ThemeCategory {
+  id         Int      @id @default(autoincrement())
+  themeId    Int
+  categoryId Int
+  createdAt  DateTime @default(now())
+
+  theme    Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([themeId, categoryId])
+  @@index([themeId])
+  @@index([categoryId])
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  color     String
+  icon      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  themes ThemeTag[]
+}
+
+model ThemeTag {
+  id        Int      @id @default(autoincrement())
+  themeId   Int
+  tagId     Int
+  createdAt DateTime @default(now())
+
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([themeId, tagId])
+  @@index([themeId])
+  @@index([tagId])
+}
+
+model Testimonial {
+  id          Int       @id @default(autoincrement())
+  name        String
+  role        String    @default("Pasangan Pengantin")
+  image       String?
+  email       String?
+  rating      Int       @default(5)
+  text        String    @db.Text
+  event       String
+  weddingDate DateTime?
+  
+  themeId     Int?
+  theme       Theme?    @relation(fields: [themeId], references: [id], onDelete: SetNull)
+  
+  isActive    Boolean   @default(true)
+  isApproved  Boolean   @default(false)
+  isFeatured  Boolean   @default(false)
+  priority    Int       @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  approvedAt  DateTime?
+  
+  @@index([isActive, isApproved])
+  @@index([priority])
+}
+
+model TestimonialSettings {
+  id              Int      @id @default(autoincrement())
+  maxDisplay      Int      @default(6)
+  autoApprove     Boolean  @default(false)
+  requireApproval Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PricingPlan {
+  id          Int      @id @default(autoincrement())
+  name        String
+  subtitle    String
+  price       Int
+  period      String   @default("/undangan")
+  
+  // Features as JSON array
+  features    Json
+  
+  // Display settings
+  isActive    Boolean  @default(true)
+  isHighlight Boolean  @default(false)
+  isPopular   Boolean  @default(false)
+  priority    Int      @default(0)
+  
+  // Styling
+  icon        String   @default("Star")
+  gradient    String   @default("from-gray-100 to-gray-200")
+  buttonStyle String   @default("bg-gradient-to-r from-gray-700 to-gray-800 text-white hover:from-gray-600 hover:to-gray-700")
+  
+  // Optional: Discount
+  discountPrice    Int?
+  discountEndDate  DateTime?
+  
+  // WhatsApp
+  whatsappMessage String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([priority])
+  @@index([isActive])
+}
+
+model PricingSettings {
+  id              Int      @id @default(autoincrement())
+  maxDisplay      Int      @default(3)
+  whatsappNumber  String   @default("6281248406898")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Add these models to your existing schema.prisma file
+model Service {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  
+  // Visual
+  icon        String   @default("Star")
+  image       String?
+  color       String   @default("from-gray-400 to-gray-500")
+  
+  // Features as JSON array
+  features    Json
+  
+  // CTA
+  buttonText  String   @default("Lihat Tema Ini")
+  buttonLink  String?
+  
+  // Display settings
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  priority    Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([priority])
+  @@index([isActive])
+}
+
+model ServiceSettings {
+  id                  Int      @id @default(autoincrement())
+  maxDisplay          Int      @default(3)
+  enableFlipAnimation Boolean  @default(true)
+  autoRotate          Boolean  @default(false)
+  autoRotateInterval  Int      @default(5000)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
