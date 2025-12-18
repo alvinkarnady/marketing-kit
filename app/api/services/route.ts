@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 // GET ALL SERVICES
 export async function GET(req: Request) {
@@ -86,29 +85,8 @@ export async function POST(req: Request) {
       const bytes = await imageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      // Create unique filename
-      const timestamp = Date.now();
-      const filename = `service-${timestamp}-${imageFile.name.replace(
-        /\s/g,
-        "-"
-      )}`;
-      const uploadDir = path.join(
-        process.cwd(),
-        "public",
-        "images",
-        "services"
-      );
-
-      // Ensure directory exists
-      try {
-        await mkdir(uploadDir, { recursive: true });
-      } catch (err) {
-        console.error("Error creating directory:", err);
-      }
-
-      const filepath = path.join(uploadDir, filename);
-      await writeFile(filepath, buffer);
-      imagePath = `/images/services/${filename}`;
+      // Upload to Cloudinary
+      imagePath = await uploadToCloudinary(buffer, "marketing-kit/services");
     }
 
     const service = await prisma.service.create({

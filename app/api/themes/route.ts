@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { uploadImage } from "@/lib/upload";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export async function GET() {
   try {
@@ -44,6 +44,7 @@ export async function POST(req: Request) {
     const name = form.get("name") as string;
     const price = Number(form.get("price"));
     const demoUrl = form.get("demoUrl") as string;
+    const imageFile = form.get("image") as File | null;
 
     // Get multiple category IDs
     const categoryIdsRaw = form.get("categoryIds") as string;
@@ -73,6 +74,14 @@ export async function POST(req: Request) {
       }
     }
 
+    // Validation
+    if (!name || !demoUrl) {
+      return NextResponse.json(
+        { error: "Name and demo URL are required" },
+        { status: 400 }
+      );
+    }
+
     if (categoryIds.length === 0) {
       return NextResponse.json(
         { error: "At least one category is required" },
@@ -80,10 +89,14 @@ export async function POST(req: Request) {
       );
     }
 
-    let imageUrl = null;
-    const image = form.get("image");
-    if (image instanceof File) {
-      imageUrl = await uploadImage(image);
+    let imagePath: string | null = null;
+    // Handle image upload
+    if (imageFile && imageFile.size > 0) {
+      const bytes = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // Upload to Cloudinary
+      imagePath = await uploadToCloudinary(buffer, "marketing-kit/themes");
     }
 
     // Create theme with categories and tags
@@ -92,7 +105,7 @@ export async function POST(req: Request) {
         name,
         price,
         demoUrl,
-        image: imageUrl,
+        image: imagePath,
         categories: {
           create: categoryIds.map((categoryId) => ({
             categoryId,

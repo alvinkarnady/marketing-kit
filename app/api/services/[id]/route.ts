@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
+import { deleteFromCloudinary, uploadToCloudinary } from "@/lib/cloudinary";
 
 // GET SINGLE SERVICE
 export async function GET(
@@ -74,55 +75,18 @@ export async function PUT(
     if (imageFile && imageFile.size > 0) {
       // Delete old image if exists
       if (existingService.image) {
-        const oldImagePath = path.join(
-          process.cwd(),
-          "public",
-          existingService.image
-        );
-        try {
-          await unlink(oldImagePath);
-        } catch (err) {
-          console.error("Error deleting old image:", err);
-        }
+        await deleteFromCloudinary(existingService.image);
       }
 
-      // Upload new image
+      // Upload new image to Cloudinary
       const bytes = await imageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const timestamp = Date.now();
-      const filename = `service-${timestamp}-${imageFile.name.replace(
-        /\s/g,
-        "-"
-      )}`;
-      const uploadDir = path.join(
-        process.cwd(),
-        "public",
-        "images",
-        "services"
-      );
 
-      try {
-        await mkdir(uploadDir, { recursive: true });
-      } catch (err) {
-        console.error("Error creating directory:", err);
-      }
-
-      const filepath = path.join(uploadDir, filename);
-      await writeFile(filepath, buffer);
-      imagePath = `/images/services/${filename}`;
+      imagePath = await uploadToCloudinary(buffer, "marketing-kit/services");
     } else if (!keepExistingImage) {
       // Delete image if requested
       if (existingService.image) {
-        const oldImagePath = path.join(
-          process.cwd(),
-          "public",
-          existingService.image
-        );
-        try {
-          await unlink(oldImagePath);
-        } catch (err) {
-          console.error("Error deleting image:", err);
-        }
+        await deleteFromCloudinary(existingService.image);
       }
       imagePath = null;
     }
@@ -164,15 +128,16 @@ export async function DELETE(
       where: { id: Number(id) },
     });
 
-    if (service?.image) {
-      const imagePath = path.join(process.cwd(), "public", service.image);
-      try {
-        await unlink(imagePath);
-      } catch (err) {
-        console.error("Error deleting image:", err);
-      }
+    if (!service) {
+      return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
 
+    // Delete image from Cloudinary if exists
+    if (service.image) {
+      await deleteFromCloudinary(service.image);
+    }
+
+    // Delete service from database
     await prisma.service.delete({
       where: { id: Number(id) },
     });

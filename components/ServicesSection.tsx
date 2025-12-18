@@ -251,12 +251,23 @@ export default function ServicesSection() {
                       {/* Image */}
                       <div className="relative h-72 w-full overflow-hidden">
                         {service.image ? (
-                          <Image
-                            src={service.image}
-                            alt={service.title}
-                            fill
-                            className="object-cover transition-transform duration-[1200ms] group-hover:scale-110"
-                          />
+                          service.image.includes("cloudinary.com") ? (
+                            <Image
+                              src={service.image}
+                              alt={service.title}
+                              fill
+                              className="object-cover transition-transform duration-[1200ms] group-hover:scale-110"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
+                              quality={85}
+                              priority={index === 0}
+                            />
+                          ) : (
+                            <img
+                              src={service.image}
+                              alt={service.title}
+                              className="w-full h-full object-cover transition-transform duration-[1200ms] group-hover:scale-110"
+                            />
+                          )
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                             <Icon className="w-20 h-20 text-gray-300" />
