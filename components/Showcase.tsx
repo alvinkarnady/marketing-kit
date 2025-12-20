@@ -61,7 +61,7 @@ const iconMap: Record<string, any> = {
 const ITEMS_PER_PAGE = 9;
 
 export default function Showcase() {
-  const ref = useRef(null);
+  const ref = useRef<HTMLElement | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [themes, setThemes] = useState<Theme[]>([]);
   const [categories, setCategories] = useState<string[]>(["All"]);
