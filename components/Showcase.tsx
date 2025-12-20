@@ -19,6 +19,8 @@ import {
   Crown,
   Award,
   Flame,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface Category {
@@ -55,6 +57,9 @@ const iconMap: Record<string, any> = {
   Flame,
 };
 
+// Items per page
+const ITEMS_PER_PAGE = 9;
+
 export default function Showcase() {
   const ref = useRef(null);
   const [activeCategory, setActiveCategory] = useState("All");
@@ -62,6 +67,9 @@ export default function Showcase() {
   const [categories, setCategories] = useState<string[]>(["All"]);
   const [loading, setLoading] = useState(true);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch themes and categories from backend
   useEffect(() => {
@@ -89,6 +97,11 @@ export default function Showcase() {
     fetchData();
   }, []);
 
+  // Reset to page 1 when category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory]);
+
   // Filter themes
   const filteredThemes =
     activeCategory === "All"
@@ -96,6 +109,31 @@ export default function Showcase() {
       : themes.filter((t) =>
           t.categories.some((cat) => cat.name === activeCategory)
         );
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredThemes.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentThemes = filteredThemes.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of section
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -196,52 +234,92 @@ export default function Showcase() {
         </motion.p>
       </motion.div>
 
-      {/* CATEGORY FILTER - RESPONSIVE */}
-      <div className="flex justify-center gap-2 sm:gap-3 mb-10 sm:mb-12 md:mb-16 px-4 flex-wrap max-w-4xl mx-auto">
-        {categories.map((cat) => {
-          const isActive = activeCategory === cat;
-          const count = getCategoryCount(cat);
-          return (
-            <motion.button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className={`relative px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-full text-xs sm:text-sm font-semibold border-2 transition-all duration-300 overflow-hidden group ${
-                isActive
-                  ? "border-transparent text-white shadow-lg"
-                  : "text-[#b38b00] border-[#d4af37]/30 hover:border-[#d4af37] bg-white/50 backdrop-blur-sm"
-              }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeCategory"
-                  className="absolute inset-0 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]"
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
-                {cat}
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className={`inline-flex items-center justify-center min-w-[18px] sm:min-w-[20px] h-4 sm:h-5 px-1 sm:px-1.5 rounded-full text-[10px] sm:text-xs font-bold ${
+      {/* CATEGORY FILTER - HORIZONTAL SCROLL ON MOBILE */}
+      <div className="mb-8 sm:mb-10 md:mb-12 px-4">
+        <div className="max-w-4xl mx-auto overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 sm:gap-3 pb-2 min-w-max sm:min-w-2 sm:flex-wrap sm:justify-center">
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat;
+              const count = getCategoryCount(cat);
+              return (
+                <motion.button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`relative px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-full text-xs sm:text-sm font-semibold border-2 transition-all duration-300 overflow-hidden group whitespace-nowrap ${
                     isActive
-                      ? "bg-white/20 text-white"
-                      : "bg-amber-100 text-amber-700"
+                      ? "border-transparent text-white shadow-lg"
+                      : "text-[#b38b00] border-[#d4af37]/30 hover:border-[#d4af37] bg-white/50 backdrop-blur-sm"
                   }`}
                 >
-                  {count}
-                </motion.span>
-              </span>
-            </motion.button>
-          );
-        })}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeCategory"
+                      className="absolute inset-0 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                    {cat}
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className={`inline-flex items-center justify-center min-w-[18px] sm:min-w-[20px] h-4 sm:h-5 px-1 sm:px-1.5 rounded-full text-[10px] sm:text-xs font-bold ${
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {count}
+                    </motion.span>
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+        {/* Scroll hint for mobile */}
+        <div className="flex sm:hidden justify-center mt-2">
+          <p className="text-[10px] text-[#6b4e2f]/40">
+            ← Swipe untuk kategori lainnya →
+          </p>
+        </div>
       </div>
+
+      {/* Add custom scrollbar hide CSS */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+
+      {/* RESULTS INFO */}
+      {!loading && filteredThemes.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center mb-6 sm:mb-8 px-4"
+        >
+          <p className="text-xs text-[#6b4e2f]/60">
+            Menampilkan {startIndex + 1}-
+            {Math.min(endIndex, filteredThemes.length)} dari{" "}
+            {filteredThemes.length} tema
+          </p>
+        </motion.div>
+      )}
 
       {/* LOADING STATE - Skeleton */}
       {loading && (
-        <div className="relative grid gap-4 sm:gap-6 md:gap-8 lg:gap-10 px-4 sm:px-6 md:px-12 lg:px-24 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="relative grid gap-4 sm:gap-6 md:gap-8 lg:gap-10 px-4 sm:px-6 md:px-12 lg:px-24 grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
@@ -251,8 +329,8 @@ export default function Showcase() {
               className="relative rounded-2xl overflow-hidden bg-white shadow-lg border border-amber-100"
             >
               <div className="w-full h-48 sm:h-56 md:h-64 lg:h-72 bg-gradient-to-br from-amber-50 to-yellow-50 animate-pulse" />
-              <div className="p-4 sm:p-5 md:p-6 space-y-3">
-                <div className="h-5 sm:h-6 bg-amber-100 rounded animate-pulse" />
+              <div className="p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3">
+                <div className="h-4 sm:h-5 md:h-6 bg-amber-100 rounded animate-pulse" />
                 <div className="h-3 sm:h-4 bg-amber-50 rounded w-3/4 animate-pulse" />
                 <div className="h-8 sm:h-9 md:h-10 bg-amber-100 rounded animate-pulse" />
               </div>
@@ -280,11 +358,11 @@ export default function Showcase() {
         </motion.div>
       )}
 
-      {/* THEMES GRID - RESPONSIVE */}
-      {!loading && filteredThemes.length > 0 && (
-        <div className="relative grid gap-4 sm:gap-6 md:gap-8 lg:gap-10 px-4 sm:px-6 md:px-12 lg:px-24 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      {/* THEMES GRID - 2 COLUMNS ON MOBILE */}
+      {!loading && currentThemes.length > 0 && (
+        <div className="relative grid gap-3 sm:gap-6 md:gap-8 lg:gap-10 px-4 sm:px-6 md:px-12 lg:px-24 grid-cols-2 lg:grid-cols-3">
           <AnimatePresence mode="popLayout">
-            {filteredThemes.map((theme, index) => (
+            {currentThemes.map((theme, index) => (
               <motion.div
                 key={theme.id}
                 layout
@@ -298,40 +376,57 @@ export default function Showcase() {
                 }}
                 onHoverStart={() => setHoveredCard(theme.id)}
                 onHoverEnd={() => setHoveredCard(null)}
-                className="relative rounded-2xl sm:rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl transition-all duration-500 bg-white border border-amber-100/50"
+                className="relative rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-500 bg-white border border-amber-100/50"
               >
-                {/* Tags from Database - RESPONSIVE */}
+                {/* Tags from Database - FULLY RESPONSIVE */}
                 {theme.tags.length > 0 && (
-                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3 md:top-4 md:left-4 z-20 flex flex-col gap-1.5 sm:gap-2">
+                  <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 md:top-4 md:left-4 z-20 flex flex-wrap gap-1 sm:gap-1.5 max-w-[calc(100%-12px)] sm:max-w-[calc(100%-24px)]">
                     {theme.tags.map((tag, tagIndex) => {
                       const IconComponent = getIconComponent(tag.icon);
+
                       return (
                         <motion.div
                           key={tag.id}
                           initial={{ x: -20, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: 0.2 + tagIndex * 0.1 }}
-                          className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full bg-gradient-to-r ${tag.color} text-white text-[10px] sm:text-xs font-bold shadow-lg`}
+                          className={`flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-gradient-to-r ${
+                            tag.color
+                          } text-white text-[9px] sm:text-xs font-bold shadow-lg ${
+                            tagIndex >= 3 ? "hidden sm:flex" : ""
+                          } ${tagIndex >= 3 ? "lg:flex" : ""}`}
                         >
-                          <IconComponent size={10} className="sm:w-3 sm:h-3" />
-                          {tag.name}
+                          <IconComponent className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
+                          <span className="truncate max-w-[60px] sm:max-w-none">
+                            {tag.name}
+                          </span>
                         </motion.div>
                       );
                     })}
                   </div>
                 )}
 
-                {/* Image with hover zoom - RESPONSIVE */}
-                <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-yellow-100">
+                {/* Image with hover zoom - MOBILE OPTIMIZED */}
+                <div className="relative h-40 sm:h-56 md:h-64 lg:h-72 w-full overflow-hidden bg-gradient-to-br from-amber-100 to-yellow-100">
                   {theme.image ? (
                     <>
-                      <Image
-                        src={theme.image}
-                        alt={theme.name}
-                        width={400}
-                        height={300}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
+                      {theme.image.includes("cloudinary.com") ? (
+                        <Image
+                          src={theme.image}
+                          alt={theme.name}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-110"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+                          quality={85}
+                          priority={index < 6}
+                        />
+                      ) : (
+                        <img
+                          src={theme.image}
+                          alt={theme.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      )}
                       {/* Shine effect on hover */}
                       <motion.div
                         initial={{ x: "-100%" }}
@@ -346,17 +441,15 @@ export default function Showcase() {
                     </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-amber-600 text-sm sm:text-base md:text-lg font-medium">
-                        No Image
-                      </span>
+                      <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-amber-300" />
                     </div>
                   )}
                 </div>
 
-                {/* Card Content - RESPONSIVE */}
-                <div className="relative p-4 sm:p-5 md:p-6 bg-gradient-to-b from-white to-amber-50/30">
-                  <div className="flex items-start justify-between mb-2 sm:mb-3">
-                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-[#3b2a1a] group-hover:text-[#d4af37] transition-colors line-clamp-2 flex-1 pr-2">
+                {/* Card Content - MOBILE OPTIMIZED */}
+                <div className="relative p-2.5 sm:p-4 md:p-6 bg-gradient-to-b from-white to-amber-50/30">
+                  <div className="flex items-start justify-between mb-1.5 sm:mb-3">
+                    <h3 className="text-xs sm:text-lg md:text-xl font-bold text-[#3b2a1a] group-hover:text-[#d4af37] transition-colors line-clamp-2 flex-1 pr-1 sm:pr-2">
                       {theme.name}
                     </h3>
                     <motion.div
@@ -364,51 +457,49 @@ export default function Showcase() {
                       transition={{ duration: 0.3 }}
                       className="flex-shrink-0"
                     >
-                      <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />
+                      <Star className="w-3 h-3 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />
                     </motion.div>
                   </div>
 
-                  {/* Categories Pills - RESPONSIVE */}
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-                    {theme.categories.slice(0, 2).map((cat) => (
+                  {/* Categories Pills - MOBILE OPTIMIZED */}
+                  <div className="flex flex-wrap gap-1 sm:gap-2 mb-2 sm:mb-4">
+                    {theme.categories.slice(0, 1).map((cat) => (
                       <span
                         key={cat.id}
-                        className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-amber-100/80 backdrop-blur-sm text-amber-800 rounded-full text-[10px] sm:text-xs font-medium"
+                        className="px-1.5 py-0.5 sm:px-2.5 sm:py-1 bg-amber-100/80 backdrop-blur-sm text-amber-800 rounded-full text-[9px] sm:text-xs font-medium"
                       >
                         {cat.name}
                       </span>
                     ))}
-                    {theme.categories.length > 2 && (
-                      <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] sm:text-xs font-medium">
-                        +{theme.categories.length - 2}
+                    {theme.categories.length > 1 && (
+                      <span className="px-1.5 py-0.5 sm:px-2.5 sm:py-1 bg-amber-50 text-amber-600 rounded-full text-[9px] sm:text-xs font-medium">
+                        +{theme.categories.length - 1}
                       </span>
                     )}
                   </div>
 
-                  {/* Price - RESPONSIVE */}
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <div>
-                      <p className="text-[10px] sm:text-xs text-[#6b4e2f]/60 mb-0.5 sm:mb-1">
-                        Harga Mulai
-                      </p>
-                      <p className="text-lg sm:text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
-                        Rp {theme.price.toLocaleString("id-ID")}
-                      </p>
-                    </div>
+                  {/* Price - MOBILE OPTIMIZED */}
+                  <div className="mb-2 sm:mb-4">
+                    <p className="text-[9px] sm:text-xs text-[#6b4e2f]/60 mb-0.5">
+                      Harga Mulai
+                    </p>
+                    <p className="text-sm sm:text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
+                      Rp {theme.price.toLocaleString("id-ID")}
+                    </p>
                   </div>
 
-                  {/* Action Buttons - RESPONSIVE */}
-                  <div className="flex gap-2 sm:gap-3">
+                  {/* Action Buttons - MOBILE OPTIMIZED */}
+                  <div className="flex gap-1.5 sm:gap-3">
                     <motion.a
                       href={theme.demoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 bg-white border-2 border-amber-200 text-amber-800 px-3 py-2 sm:px-4 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm"
+                      className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-white border-2 border-amber-200 text-amber-800 px-2 py-1.5 sm:px-4 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold text-[10px] sm:text-sm hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm"
                     >
-                      <ExternalLink size={14} className="sm:w-4 sm:h-4" />
-                      Demo
+                      <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="">Lihat</span>
                     </motion.a>
 
                     <motion.a
@@ -420,10 +511,10 @@ export default function Showcase() {
                         boxShadow: "0 10px 30px rgba(212, 175, 55, 0.3)",
                       }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-white px-3 py-2 sm:px-4 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all"
+                      className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-white px-2 py-1.5 sm:px-4 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold text-[10px] sm:text-sm shadow-lg hover:shadow-xl transition-all"
                     >
-                      <MessageCircle size={14} className="sm:w-4 sm:h-4" />
-                      Pesan
+                      <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="">Pesan</span>
                     </motion.a>
                   </div>
                 </div>
@@ -440,7 +531,95 @@ export default function Showcase() {
         </div>
       )}
 
-      {/* Bottom CTA - RESPONSIVE */}
+      {/* PAGINATION - MOBILE OPTIMIZED */}
+      {!loading && filteredThemes.length > ITEMS_PER_PAGE && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8 sm:mt-12 md:mt-16 px-4"
+        >
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
+            {/* Previous Button */}
+            <motion.button
+              onClick={prevPage}
+              disabled={currentPage === 1}
+              whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+              whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+              className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl font-semibold transition-all ${
+                currentPage === 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50 shadow-sm"
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </motion.button>
+
+            {/* Page Numbers - MOBILE OPTIMIZED */}
+            <div className="flex gap-1 sm:gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => {
+                  // Show first page, last page, current page, and adjacent pages
+                  const showPage =
+                    page === 1 ||
+                    page === totalPages ||
+                    Math.abs(page - currentPage) <= 1;
+
+                  // Show ellipsis
+                  const showEllipsis =
+                    (page === 2 && currentPage > 3) ||
+                    (page === totalPages - 1 && currentPage < totalPages - 2);
+
+                  if (!showPage && !showEllipsis) return null;
+
+                  if (showEllipsis) {
+                    return (
+                      <span
+                        key={page}
+                        className="px-2 sm:px-3 py-1.5 sm:py-2 text-[#6b4e2f]/60 text-xs sm:text-sm"
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <motion.button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`min-w-[28px] sm:min-w-[40px] px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all ${
+                        currentPage === page
+                          ? "bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-white shadow-lg"
+                          : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50"
+                      }`}
+                    >
+                      {page}
+                    </motion.button>
+                  );
+                }
+              )}
+            </div>
+
+            {/* Next Button */}
+            <motion.button
+              onClick={nextPage}
+              disabled={currentPage === totalPages}
+              whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
+              whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+              className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl font-semibold transition-all ${
+                currentPage === totalPages
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50 shadow-sm"
+              }`}
+            >
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Bottom CTA - MOBILE OPTIMIZED */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -448,13 +627,13 @@ export default function Showcase() {
         viewport={{ once: true }}
         className="text-center mt-12 sm:mt-16 md:mt-20 px-4"
       >
-        <p className="text-[#6b4e2f]/80 mb-4 sm:mb-6 text-sm sm:text-base">
+        <p className="text-[#6b4e2f]/80 mb-4 sm:mb-6 text-xs sm:text-base">
           Tidak menemukan tema yang cocok?
         </p>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-[#d4af37] to-[#b38b00] text-white rounded-full font-semibold shadow-xl hover:shadow-2xl transition-all text-sm sm:text-base"
+          className="px-5 py-2.5 sm:px-8 sm:py-4 bg-gradient-to-r from-[#d4af37] to-[#b38b00] text-white rounded-full font-semibold shadow-xl hover:shadow-2xl transition-all text-xs sm:text-base"
         >
           Request Custom Design
         </motion.button>
