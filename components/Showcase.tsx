@@ -61,7 +61,7 @@ const iconMap: Record<string, any> = {
 const ITEMS_PER_PAGE = 9;
 
 export default function Showcase() {
-  const ref = useRef<HTMLElement | null>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [themes, setThemes] = useState<Theme[]>([]);
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -234,10 +234,66 @@ export default function Showcase() {
         </motion.p>
       </motion.div>
 
-      {/* CATEGORY FILTER - HORIZONTAL SCROLL ON MOBILE */}
+      {/* CATEGORY FILTER - 3 ROWS SCROLLABLE ON MOBILE */}
       <div className="mb-8 sm:mb-10 md:mb-12 px-4">
-        <div className="max-w-4xl mx-auto overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 sm:gap-3 pb-2 min-w-max sm:min-w-2 sm:flex-wrap sm:justify-center">
+        <div className="max-w-5xl mx-auto">
+          {/* Mobile: 3 rows with horizontal scroll per row */}
+          <div className="sm:hidden space-y-2">
+            {/* Split categories into 3 groups for mobile */}
+            {[0, 1, 2].map((rowIndex) => {
+              const rowCategories = categories.filter(
+                (_, index) => index % 3 === rowIndex
+              );
+              if (rowCategories.length === 0) return null;
+
+              return (
+                <div key={rowIndex} className="overflow-x-auto scrollbar-hide">
+                  <div className="flex gap-2 pb-1 min-w-max">
+                    {rowCategories.map((cat) => {
+                      const isActive = activeCategory === cat;
+                      const count = getCategoryCount(cat);
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveCategory(cat)}
+                          className={`relative px-3 py-2 rounded-full text-xs font-semibold border-2 transition-all duration-300 overflow-hidden whitespace-nowrap touch-manipulation active:scale-95 ${
+                            isActive
+                              ? "border-transparent text-white shadow-lg"
+                              : "text-[#b38b00] border-[#d4af37]/30 bg-white/50 backdrop-blur-sm"
+                          }`}
+                        >
+                          {isActive && (
+                            <span className="absolute inset-0 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]" />
+                          )}
+                          <span className="relative z-10 flex items-center gap-1.5">
+                            {cat}
+                            <span
+                              className={`inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full text-[10px] font-bold ${
+                                isActive
+                                  ? "bg-white/20 text-white"
+                                  : "bg-amber-100 text-amber-700"
+                              }`}
+                            >
+                              {count}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            {/* Scroll hint */}
+            <div className="flex justify-center pt-1">
+              <p className="text-[10px] text-[#6b4e2f]/40">
+                ← Swipe untuk kategori lainnya →
+              </p>
+            </div>
+          </div>
+
+          {/* Tablet/Desktop: Normal wrap layout */}
+          <div className="hidden sm:flex flex-wrap justify-center gap-2 sm:gap-3">
             {categories.map((cat) => {
               const isActive = activeCategory === cat;
               const count = getCategoryCount(cat);
@@ -247,7 +303,7 @@ export default function Showcase() {
                   onClick={() => setActiveCategory(cat)}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`relative px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-full text-xs sm:text-sm font-semibold border-2 transition-all duration-300 overflow-hidden group whitespace-nowrap ${
+                  className={`relative px-4 py-2.5 md:px-6 md:py-3 rounded-full text-sm font-semibold border-2 transition-all duration-300 overflow-hidden group whitespace-nowrap ${
                     isActive
                       ? "border-transparent text-white shadow-lg"
                       : "text-[#b38b00] border-[#d4af37]/30 hover:border-[#d4af37] bg-white/50 backdrop-blur-sm"
@@ -264,12 +320,12 @@ export default function Showcase() {
                       }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                  <span className="relative z-10 flex items-center gap-2">
                     {cat}
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className={`inline-flex items-center justify-center min-w-[18px] sm:min-w-[20px] h-4 sm:h-5 px-1 sm:px-1.5 rounded-full text-[10px] sm:text-xs font-bold ${
+                      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold ${
                         isActive
                           ? "bg-white/20 text-white"
                           : "bg-amber-100 text-amber-700"
@@ -283,15 +339,9 @@ export default function Showcase() {
             })}
           </div>
         </div>
-        {/* Scroll hint for mobile */}
-        <div className="flex sm:hidden justify-center mt-2">
-          <p className="text-[10px] text-[#6b4e2f]/40">
-            ← Swipe untuk kategori lainnya →
-          </p>
-        </div>
       </div>
 
-      {/* Add custom scrollbar hide CSS */}
+      {/* Scrollbar hide CSS - keep this */}
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -309,7 +359,7 @@ export default function Showcase() {
           animate={{ opacity: 1 }}
           className="text-center mb-6 sm:mb-8 px-4"
         >
-          <p className="text-xs text-[#6b4e2f]/60">
+          <p className="text-sm text-[#6b4e2f]/60">
             Menampilkan {startIndex + 1}-
             {Math.min(endIndex, filteredThemes.length)} dari{" "}
             {filteredThemes.length} tema
@@ -499,7 +549,7 @@ export default function Showcase() {
                       className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-white border-2 border-amber-200 text-amber-800 px-2 py-1.5 sm:px-4 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold text-[10px] sm:text-sm hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm"
                     >
                       <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span className="">Lihat</span>
+                      <span className=" sm:inline">Lihat</span>
                     </motion.a>
 
                     <motion.a
@@ -514,7 +564,7 @@ export default function Showcase() {
                       className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-white px-2 py-1.5 sm:px-4 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold text-[10px] sm:text-sm shadow-lg hover:shadow-xl transition-all"
                     >
                       <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span className="">Pesan</span>
+                      <span className=" sm:inline">Pesan</span>
                     </motion.a>
                   </div>
                 </div>
@@ -531,7 +581,7 @@ export default function Showcase() {
         </div>
       )}
 
-      {/* PAGINATION - MOBILE OPTIMIZED */}
+      {/* PAGINATION - MOBILE FIXED & IMPROVED */}
       {!loading && filteredThemes.length > ITEMS_PER_PAGE && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -540,21 +590,19 @@ export default function Showcase() {
         >
           <div className="flex items-center justify-center gap-1 sm:gap-2">
             {/* Previous Button */}
-            <motion.button
+            <button
               onClick={prevPage}
               disabled={currentPage === 1}
-              whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
-              whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
-              className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl font-semibold transition-all ${
+              className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl font-semibold transition-all touch-manipulation ${
                 currentPage === 1
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50 shadow-sm"
+                  : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50 shadow-sm active:scale-95"
               }`}
             >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            </motion.button>
+              <ChevronLeft className="w-5 h-5 sm:w-5 sm:h-5" />
+            </button>
 
-            {/* Page Numbers - MOBILE OPTIMIZED */}
+            {/* Page Numbers - FIXED FOR MOBILE */}
             <div className="flex gap-1 sm:gap-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                 (page) => {
@@ -574,8 +622,8 @@ export default function Showcase() {
                   if (showEllipsis) {
                     return (
                       <span
-                        key={page}
-                        className="px-2 sm:px-3 py-1.5 sm:py-2 text-[#6b4e2f]/60 text-xs sm:text-sm"
+                        key={`ellipsis-${page}`}
+                        className="px-2 sm:px-3 py-2 sm:py-2 text-[#6b4e2f]/60 text-sm sm:text-sm"
                       >
                         ...
                       </span>
@@ -583,38 +631,34 @@ export default function Showcase() {
                   }
 
                   return (
-                    <motion.button
+                    <button
                       key={page}
                       onClick={() => goToPage(page)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`min-w-[28px] sm:min-w-[40px] px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all ${
+                      className={`min-w-[40px] sm:min-w-[44px] h-[40px] sm:h-[44px] px-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-sm transition-all touch-manipulation active:scale-95 ${
                         currentPage === page
                           ? "bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-white shadow-lg"
-                          : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50"
+                          : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50 shadow-sm"
                       }`}
                     >
                       {page}
-                    </motion.button>
+                    </button>
                   );
                 }
               )}
             </div>
 
             {/* Next Button */}
-            <motion.button
+            <button
               onClick={nextPage}
               disabled={currentPage === totalPages}
-              whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
-              whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-              className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl font-semibold transition-all ${
+              className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl font-semibold transition-all touch-manipulation ${
                 currentPage === totalPages
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50 shadow-sm"
+                  : "bg-white border-2 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50 shadow-sm active:scale-95"
               }`}
             >
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </motion.button>
+              <ChevronRight className="w-5 h-5 sm:w-5 sm:h-5" />
+            </button>
           </div>
         </motion.div>
       )}
