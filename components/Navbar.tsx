@@ -83,7 +83,7 @@ export default function Navbar() {
             >
               <span className="text-white font-bold text-lg">P</span>
             </motion.div>
-            <span className="text-2xl font-bold tracking-tight text-white">
+            <span className="text-xl sm:text-2xl font-bold tracking-tight text-white">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400">
                 Piawai
               </span>{" "}
