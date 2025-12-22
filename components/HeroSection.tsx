@@ -170,13 +170,13 @@ export default function HeroSection() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-6"
         >
           <Sparkles className="w-4 h-4 text-yellow-300" />
-          <span className="text-sm font-medium text-white/90">
+          <span className="text-xs sm:text-sm font-medium text-white/90">
             Undangan Digital Premium
           </span>
         </motion.div>
 
         <motion.h1
-          className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 leading-tight tracking-tight"
+          className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -195,7 +195,7 @@ export default function HeroSection() {
         </motion.h1>
 
         <motion.p
-          className="text-white/80 text-base sm:text-base md:text-lg lg:text-xl mb-10 leading-relaxed max-w-2xl mx-auto"
+          className="text-white/80 text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 leading-relaxed max-w-2xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -210,7 +210,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 mb-12"
+          className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 mb-10 sm:mb-12"
         >
           <div className="flex items-center gap-2 text-white/90">
             <div className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
@@ -276,7 +276,7 @@ export default function HeroSection() {
             boxShadow: "0 20px 40px rgba(255, 215, 0, 0.3)",
           }}
           whileTap={{ scale: 0.95 }}
-          className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-md sm:text-lg overflow-hidden"
+          className="group relative inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-md overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500" />
           <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -288,7 +288,7 @@ export default function HeroSection() {
           href="#contact"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="group inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-md sm:text-lg border-2 border-white/30 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all"
+          className="group inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-md border-2 border-white/30 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all"
         >
           <span className="text-white">Konsultasi Gratis</span>
           <motion.span
