@@ -158,7 +158,7 @@ export default function SubmitTestimonialPage() {
           className="inline-flex items-center gap-2 text-[#6b4e2f] hover:text-[#d4af37] mb-8 transition-colors"
         >
           <ArrowLeft size={20} />
-          Kembali ke Beranda
+          Kembali ke Home
         </motion.a>
 
         {/* Header */}
