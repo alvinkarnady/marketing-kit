@@ -512,7 +512,7 @@ export default function Showcase() {
                             className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 bg-white border-2 border-amber-200 text-amber-800 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[9px] sm:text-xs hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm"
                           >
                             <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                            <span className="hidden sm:inline">Lihat</span>
+                            <span className="sm:inline">Lihat</span>
                           </motion.a>
 
                           <motion.a
@@ -527,7 +527,7 @@ export default function Showcase() {
                             className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[9px] sm:text-xs shadow-lg hover:shadow-xl transition-all"
                           >
                             <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                            <span className="hidden sm:inline">Pesan</span>
+                            <span className="sm:inline">Pesan</span>
                           </motion.a>
                         </div>
                       </div>
