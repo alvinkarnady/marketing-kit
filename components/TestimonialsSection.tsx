@@ -45,7 +45,7 @@ export default function TestimonialsSection() {
 
   // Duplicate testimonials for seamless infinite scroll
   const duplicatedTestimonials =
-    testimonials.length < 2 ? [...testimonials, ...testimonials] : [];
+    testimonials.length > 0 ? [...testimonials, ...testimonials] : [];
 
   // Don't render if no testimonials
   if (!loading && testimonials.length === 0) {
@@ -132,11 +132,11 @@ export default function TestimonialsSection() {
             <motion.div
               className="flex gap-4 md:gap-6"
               animate={{
-                x: isPaused ? [0, 1000] : [0, -1000],
+                x: isPaused ? 0 : [0, -1500],
               }}
               transition={{
                 x: {
-                  duration: 20,
+                  duration: 30,
                   repeat: Infinity,
                   ease: "linear",
                 },
@@ -235,7 +235,7 @@ export default function TestimonialsSection() {
           viewport={{ once: true }}
           className="text-center mt-16 px-6"
         >
-          <p className="text-[#6b4e2f]/70 mb-6 text-sm">
+          <p className="text-[#6b4e2f]/70 mb-6">
             Siap menjadi bagian dari cerita sukses kami?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
