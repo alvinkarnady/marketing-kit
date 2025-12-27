@@ -146,19 +146,19 @@ export default function AboutSection() {
                 transition={{ delay: index * 0.2, duration: 0.6 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="relative group"
+                className="relative text-center"
               >
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-amber-100 shadow-lg hover:shadow-xl transition-all duration-500">
+                <div className="inline-flex items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl p-3 md:p-5 border border-amber-100 shadow-lg hover:shadow-xl transition-all duration-500">
                   {/* Icon with gradient background */}
                   <motion.div
                     whileHover={{ rotate: 360, scale: 1.1 }}
                     transition={{ duration: 0.6 }}
-                    className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-white mb-4 shadow-lg"
+                    className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-white shadow-lg"
                   >
                     <Icon size={28} />
                   </motion.div>
 
-                  <div className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00] mb-2">
+                  <div className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#111110] ">
                     <AnimatedCounter target={stat.value} suffix={stat.suffix} />
                   </div>
                   <p className="text-[#6b4e2f]/80 font-medium">{stat.label}</p>
@@ -186,7 +186,7 @@ export default function AboutSection() {
               className="relative"
             >
               {/* Main image */}
-              <div className="relative w-full h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+              <div className="relative w-full h-[300px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
                   src="/images/ring.jpg"
                   alt="Elegant wedding setup"
@@ -222,16 +222,16 @@ export default function AboutSection() {
               transition={{ delay: 0.4, duration: 0.8 }}
               viewport={{ once: true }}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="absolute -bottom-8 -right-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 border border-amber-100 max-w-xs"
+              className="absolute -bottom-8 -right-4 md:-right-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-3 md:p-8 border border-amber-100 max-w-xs"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-white" />
                   </div>
                 </div>
                 <div>
-                  <p className="italic text-[#6b4e2f] text-sm leading-relaxed mb-2">
+                  <p className="italic text-[#6b4e2f] text-xs md:text-sm leading-relaxed mb-1 md:mb-2">
                     "Every detail tells a story — we craft yours with elegance
                     and love."
                   </p>
@@ -242,7 +242,7 @@ export default function AboutSection() {
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.6 + i * 0.1 }}
-                        className="text-amber-400 text-sm"
+                        className="text-amber-400 text-xs md:text-sm"
                       >
                         ★
                       </motion.span>
@@ -269,12 +269,12 @@ export default function AboutSection() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 mb-6"
             >
               <Award className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-medium text-amber-800">
+              <span className="text-xs sm:text-sm font-medium text-amber-800">
                 Trusted by 500+ Couples
               </span>
             </motion.div>
 
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#b38b00]">
                 Mengapa Memilih
               </span>
@@ -282,7 +282,7 @@ export default function AboutSection() {
               <span className="text-[#3b2a1a]">Phinisi Kit?</span>
             </h2>
 
-            <p className="text-[#6b4e2f]/80 leading-relaxed text-lg mb-8">
+            <p className="text-[#6b4e2f]/80 leading-relaxed text-sm md:text-lg mb-8">
               Kami menghadirkan pengalaman pembuatan undangan digital yang tidak
               hanya indah, tapi juga penuh makna. Setiap elemen dirancang dengan
               rasa, gaya, dan sentuhan premium — mencerminkan kisah cinta yang

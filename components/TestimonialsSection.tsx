@@ -45,7 +45,7 @@ export default function TestimonialsSection() {
 
   // Duplicate testimonials for seamless infinite scroll
   const duplicatedTestimonials =
-    testimonials.length > 0 ? [...testimonials, ...testimonials] : [];
+    testimonials.length < 2 ? [...testimonials, ...testimonials] : [];
 
   // Don't render if no testimonials
   if (!loading && testimonials.length === 0) {
@@ -83,8 +83,8 @@ export default function TestimonialsSection() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 mb-6"
           >
             <Star className="w-4 h-4 text-amber-600 fill-amber-600" />
-            <span className="text-sm font-medium text-amber-800">
-              Testimoni
+            <span className="text-xs sm:text-sm font-medium text-amber-800">
+              Testimoni Pelanggan
             </span>
           </motion.div>
 
@@ -93,7 +93,7 @@ export default function TestimonialsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-6xl font-bold mb-6"
+            className="text-3xl sm:text-4xl md:text-6xl font-bold mb-6"
           >
             <span className="text-[#3b2a1a]">Cerita dari</span>
             <br />
@@ -107,7 +107,7 @@ export default function TestimonialsSection() {
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-[#6b4e2f]/80 max-w-2xl mx-auto text-lg"
+            className="text-[#6b4e2f]/80 max-w-2xl mx-auto text-sm md:text-lg"
           >
             Bergabunglah dengan ratusan pasangan yang telah mempercayai kami
             untuk menciptakan undangan digital mereka yang sempurna.
@@ -132,11 +132,11 @@ export default function TestimonialsSection() {
             <motion.div
               className="flex gap-4 md:gap-6"
               animate={{
-                x: isPaused ? 0 : [0, -2400],
+                x: isPaused ? [0, 1000] : [0, -1000],
               }}
               transition={{
                 x: {
-                  duration: 50,
+                  duration: 20,
                   repeat: Infinity,
                   ease: "linear",
                 },
@@ -235,12 +235,12 @@ export default function TestimonialsSection() {
           viewport={{ once: true }}
           className="text-center mt-16 px-6"
         >
-          <p className="text-[#6b4e2f]/70 mb-6">
+          <p className="text-[#6b4e2f]/70 mb-6 text-sm">
             Siap menjadi bagian dari cerita sukses kami?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.a
-              href="#themes"
+              href="#gallery"
               whileHover={{
                 scale: 1.05,
                 boxShadow: "0 20px 40px rgba(212, 175, 55, 0.3)",

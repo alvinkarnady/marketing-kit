@@ -95,7 +95,7 @@ export default function HeroSection() {
 
   // Smooth scroll to next section
   const scrollToGallery = () => {
-    const gallery = document.getElementById("themes");
+    const gallery = document.getElementById("gallery");
     if (gallery) {
       gallery.scrollIntoView({ behavior: "smooth" });
     }
