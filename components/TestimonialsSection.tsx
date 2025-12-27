@@ -203,7 +203,7 @@ export default function TestimonialsSection() {
                   </div>
 
                   {/* Testimonial Text */}
-                  <p className="text-[#6b4e2f] leading-relaxed mb-4 md:mb-6 relative z-10 text-sm md:text-base">
+                  <p className="text-[#6b4e2f] leading-relaxed mb-4 md:mb-6 relative z-10 text-xs md:text-sm">
                     "{testimonial.text}"
                   </p>
 
