@@ -33,11 +33,15 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params; // <-- fix: await params
-    const { name } = await req.json();
+    const { name, priority } = await req.json();
+
+    const dataToUpdate: any = {};
+    if (name !== undefined) dataToUpdate.name = name;
+    if (priority !== undefined) dataToUpdate.priority = Number(priority);
 
     const updated = await prisma.category.update({
       where: { id: Number(id) },
-      data: { name },
+      data: dataToUpdate,
     });
 
     return NextResponse.json(updated);

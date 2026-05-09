@@ -57,11 +57,12 @@ const iconMap: Record<string, any> = {
 
 export default function Showcase() {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("");
   const [themes, setThemes] = useState<Theme[]>([]);
-  const [categories, setCategories] = useState<string[]>(["All"]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [showPrice, setShowPrice] = useState(true);
 
   // Fetch themes and categories from backend
   useEffect(() => {
@@ -75,10 +76,20 @@ export default function Showcase() {
         const categoriesRes = await fetch("/api/categories");
         const categoriesData = await categoriesRes.json();
 
+        const settingsRes = await fetch("/api/theme-settings");
+        const settingsData = await settingsRes.json();
+        
+        if (settingsData && settingsData.showPrice !== undefined) {
+          setShowPrice(settingsData.showPrice);
+        }
+
         setThemes(themesData.data || []);
 
         const categoryNames = categoriesData.map((cat: Category) => cat.name);
-        setCategories(["All", ...categoryNames]);
+        setCategories(categoryNames);
+        if (categoryNames.length > 0) {
+          setActiveCategory(categoryNames[0]);
+        }
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -90,12 +101,9 @@ export default function Showcase() {
   }, []);
 
   // Filter themes
-  const filteredThemes =
-    activeCategory === "All"
-      ? themes
-      : themes.filter((t) =>
-          t.categories.some((cat) => cat.name === activeCategory)
-        );
+  const filteredThemes = themes.filter((t) =>
+    t.categories.some((cat) => cat.name === activeCategory)
+  );
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -117,7 +125,6 @@ export default function Showcase() {
 
   // Count themes per category
   const getCategoryCount = (categoryName: string) => {
-    if (categoryName === "All") return themes.length;
     return themes.filter((t) =>
       t.categories.some((cat) => cat.name === categoryName)
     ).length;
@@ -492,14 +499,16 @@ export default function Showcase() {
                         </div>
 
                         {/* Price */}
-                        <div className="mb-2 sm:mb-3">
-                          <p className="text-[8px] sm:text-[9px] md:text-xs text-[#6b4e2f]/60 mb-0.5">
-                            Harga Mulai
-                          </p>
-                          <p className="text-sm sm:text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
-                            Rp {theme.price.toLocaleString("id-ID")}
-                          </p>
-                        </div>
+                        {showPrice && (
+                          <div className="mb-2 sm:mb-3">
+                            <p className="text-[8px] sm:text-[9px] md:text-xs text-[#6b4e2f]/60 mb-0.5">
+                              Harga Mulai
+                            </p>
+                            <p className="text-sm sm:text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
+                              Rp {theme.price.toLocaleString("id-ID")}
+                            </p>
+                          </div>
+                        )}
 
                         {/* Action Buttons */}
                         <div className="flex gap-1.5 sm:gap-2">
@@ -664,14 +673,16 @@ export default function Showcase() {
                           </div>
 
                           {/* Price */}
-                          <div className="mb-2 sm:mb-3">
-                            <p className="text-[8px] sm:text-[9px] md:text-xs text-[#6b4e2f]/60 mb-0.5">
-                              Harga Mulai
-                            </p>
-                            <p className="text-sm sm:text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
-                              Rp {theme.price.toLocaleString("id-ID")}
-                            </p>
-                          </div>
+                          {showPrice && (
+                            <div className="mb-2 sm:mb-3">
+                              <p className="text-[8px] sm:text-[9px] md:text-xs text-[#6b4e2f]/60 mb-0.5">
+                                Harga Mulai
+                              </p>
+                              <p className="text-sm sm:text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
+                                Rp {theme.price.toLocaleString("id-ID")}
+                              </p>
+                            </div>
+                          )}
 
                           {/* Action Buttons */}
                           <div className="flex gap-1.5 sm:gap-2">

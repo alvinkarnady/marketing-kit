@@ -114,6 +114,7 @@ export default function PricingPage() {
   const [settings, setSettings] = useState({
     maxDisplay: 3,
     whatsappNumber: "6281248406898",
+    showPrice: true,
   });
 
   // ADD
@@ -1294,6 +1295,19 @@ export default function PricingPage() {
               <p className="text-xs text-gray-500 mt-1">
                 Format: 628xxx (without +)
               </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <Checkbox
+                id="show-price"
+                checked={settings.showPrice}
+                onCheckedChange={(checked) =>
+                  setSettings({ ...settings, showPrice: !!checked })
+                }
+              />
+              <Label htmlFor="show-price" className="cursor-pointer">
+                Show Prices on Landing Page
+              </Label>
             </div>
 
             <div className="flex gap-2 pt-4">

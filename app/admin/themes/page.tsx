@@ -50,6 +50,9 @@ export default function ThemesPage() {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  // THEME SETTINGS
+  const [showPrice, setShowPrice] = useState(true);
+
   // LOAD DATA
   const loadData = useCallback(async () => {
     try {
@@ -59,11 +62,17 @@ export default function ThemesPage() {
 
       const resCat = await fetch("/api/categories");
       const catData = await resCat.json();
-      setCategories(catData || []);
+      setCategories(Array.isArray(catData) ? catData : []);
 
       const resTags = await fetch("/api/tags");
       const tagsData = await resTags.json();
-      setTags(tagsData || []);
+      setTags(Array.isArray(tagsData) ? tagsData : []);
+
+      const resSettings = await fetch("/api/theme-settings");
+      const settingsData = await resSettings.json();
+      if (settingsData && settingsData.showPrice !== undefined) {
+        setShowPrice(settingsData.showPrice);
+      }
     } catch (error) {
       console.error("Failed to load data:", error);
       setThemes([]);
@@ -225,6 +234,22 @@ export default function ThemesPage() {
     loadData();
   };
 
+  // TOGGLE SHOW PRICE
+  const handleToggleShowPrice = async () => {
+    const newVal = !showPrice;
+    setShowPrice(newVal);
+    try {
+      await fetch("/api/theme-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showPrice: newVal }),
+      });
+    } catch (err) {
+      console.error("Failed to update settings", err);
+      setShowPrice(!newVal); // revert
+    }
+  };
+
   // CLEAR FILTERS
   const clearFilters = () => {
     setSearchQuery("");
@@ -268,6 +293,24 @@ export default function ThemesPage() {
             <FolderKanban size={18} />
             Manage Categories
           </Button>
+        </div>
+      </div>
+
+      {/* THEME SETTINGS BAR */}
+      <div className="bg-white border rounded-lg p-4 mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Theme Settings</h2>
+          <p className="text-sm text-gray-500">Configure global settings for themes on the landing page.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox 
+            id="show-price" 
+            checked={showPrice} 
+            onCheckedChange={handleToggleShowPrice} 
+          />
+          <Label htmlFor="show-price" className="cursor-pointer">
+            Show Theme Prices on Landing Page
+          </Label>
         </div>
       </div>
 

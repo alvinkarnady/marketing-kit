@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({
-      orderBy: { id: "desc" },
+      orderBy: [{ priority: "asc" }, { id: "desc" }],
     });
 
     return NextResponse.json(categories);

@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CategoriesPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // ADD
@@ -26,6 +26,7 @@ export default function CategoriesPage() {
   const [editModal, setEditModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
+  const [editPriority, setEditPriority] = useState<number>(0);
 
   // DELETE
   const [deleteModal, setDeleteModal] = useState(false);
@@ -37,7 +38,11 @@ export default function CategoriesPage() {
     try {
       const res = await fetch("/api/categories");
       const data = await res.json();
-      setCategories(data || []);
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        setCategories([]);
+      }
     } catch (error) {
       console.error("Failed to load categories:", error);
       setCategories([]);
@@ -87,6 +92,7 @@ export default function CategoriesPage() {
   function openEditModal(cat: any) {
     setEditId(cat.id);
     setEditName(cat.name);
+    setEditPriority(cat.priority || 0);
     setEditModal(true);
   }
 
@@ -103,7 +109,7 @@ export default function CategoriesPage() {
       const res = await fetch(`/api/categories/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName.trim() }),
+        body: JSON.stringify({ name: editName.trim(), priority: editPriority }),
       });
 
       const data = await res.json();
@@ -225,7 +231,7 @@ export default function CategoriesPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="p-3 text-left text-sm font-semibold w-20">No.</th>
+              <th className="p-3 text-left text-sm font-semibold w-20">Order</th>
               <th className="p-3 text-left text-sm font-semibold">
                 Category Name
               </th>
@@ -239,7 +245,7 @@ export default function CategoriesPage() {
             {filteredCategories.length > 0 ? (
               filteredCategories.map((cat: any, index: number) => (
                 <tr key={cat.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 text-gray-600">{index + 1}</td>
+                  <td className="p-3 text-gray-600 font-mono">{cat.priority || 0}</td>
                   <td className="p-3 font-medium">{cat.name}</td>
                   <td className="p-3">
                     <div className="flex gap-2">
@@ -343,6 +349,21 @@ export default function CategoriesPage() {
                   if (e.key === "Enter") updateCategory();
                 }}
                 autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Order Priority (0 is first)
+              </label>
+              <Input
+                type="number"
+                value={editPriority}
+                onChange={(e) => setEditPriority(Number(e.target.value))}
+                placeholder="0"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") updateCategory();
+                }}
               />
             </div>
 

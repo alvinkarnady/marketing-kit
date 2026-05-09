@@ -34,6 +34,7 @@ model Theme {
 model Category {
   id        Int      @id @default(autoincrement())
   name      String   @unique
+  priority  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -154,6 +155,7 @@ model PricingSettings {
   id              Int      @id @default(autoincrement())
   maxDisplay      Int      @default(3)
   whatsappNumber  String   @default("6281248406898")
+  showPrice       Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -196,4 +198,11 @@ model ServiceSettings {
   autoRotateInterval  Int      @default(5000)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+}
+
+model ThemeSettings {
+  id              Int      @id @default(autoincrement())
+  showPrice       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

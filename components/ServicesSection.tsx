@@ -165,7 +165,7 @@ export default function ServicesSection() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 mb-6"
         >
           <Sparkles className="w-4 h-4 text-amber-600" />
-          <span className="text-sm font-medium text-amber-800">
+          <span className="text-xs sm:text-sm font-medium text-amber-800">
             Premium Services
           </span>
         </motion.div>
@@ -178,7 +178,7 @@ export default function ServicesSection() {
             visible: { opacity: 1, y: 0 },
           }}
           transition={{ duration: 0.8 }}
-          className="text-5xl md:text-6xl font-bold mb-6"
+          className="text-3xl sm:text-5xl md:text-6xl font-bold mb-6"
         >
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#b38b00]">
             Pilihan Tema
@@ -194,7 +194,7 @@ export default function ServicesSection() {
             visible: { opacity: 1, y: 0 },
           }}
           transition={{ delay: 0.2, duration: 0.8 }}
-          className="text-[#6b4e2f]/80 max-w-2xl mx-auto mb-16 text-lg"
+          className="text-[#6b4e2f]/80 max-w-2xl mx-auto mb-16 text-sm sm:text-xl"
         >
           Pilih tema undangan yang mencerminkan kisah cinta Anda. Semua tema
           kami dirancang dengan penuh rasa dan keindahan untuk menciptakan kesan

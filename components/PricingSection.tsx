@@ -47,6 +47,7 @@ export default function PricingSection() {
   const [loading, setLoading] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState("6281248406898");
+  const [showPrice, setShowPrice] = useState(true);
 
   // Fetch pricing plans and settings
   useEffect(() => {
@@ -63,6 +64,9 @@ export default function PricingSection() {
         const resSettings = await fetch("/api/pricing/settings");
         const settingsData = await resSettings.json();
         setWhatsappNumber(settingsData.whatsappNumber || "6281248406898");
+        if (settingsData && settingsData.showPrice !== undefined) {
+          setShowPrice(settingsData.showPrice);
+        }
       } catch (error) {
         console.error("Failed to fetch pricing data:", error);
       } finally {
@@ -141,13 +145,13 @@ export default function PricingSection() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 mb-6"
         >
           <Zap className="w-4 h-4 text-amber-600" />
-          <span className="text-sm font-medium text-amber-800">
+          <span className="text-xs md:text-sm font-medium text-amber-800">
             Paket Terjangkau
           </span>
         </motion.div>
 
         {/* Heading */}
-        <h2 className="text-5xl md:text-6xl font-bold mb-6">
+        <h2 className="text-3xl md:text-6xl font-bold mb-6">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#b38b00]">
             Pilih Paket
           </span>
@@ -155,7 +159,7 @@ export default function PricingSection() {
           <span className="text-[#3b2a1a]">Undanganmu</span>
         </h2>
 
-        <p className="text-[#6b4e2f]/80 mb-16 max-w-2xl mx-auto text-lg">
+        <p className="text-[#6b4e2f]/80 mb-16 max-w-2xl mx-auto text-sm md:text-lg">
           Sesuaikan kebutuhanmu — mulai dari paket sederhana hingga desain
           eksklusif dengan fitur premium.
         </p>
@@ -253,26 +257,50 @@ export default function PricingSection() {
                   </p>
 
                   {/* Price */}
-                  <div className="mb-8">
-                    {plan.hasDiscount ? (
-                      <>
-                        <div className="flex items-baseline justify-center gap-1 mb-1">
-                          <span
-                            className={`text-2xl font-semibold line-through opacity-60 ${
-                              plan.isHighlight
-                                ? "text-white/70"
-                                : "text-[#6b4e2f]/50"
-                            }`}
-                          >
-                            Rp {plan.originalPrice?.toLocaleString("id-ID")}
-                          </span>
-                        </div>
+                  {showPrice && (
+                    <div className="mb-8">
+                      {plan.hasDiscount ? (
+                        <>
+                          <div className="flex items-baseline justify-center gap-1 mb-1">
+                            <span
+                              className={`text-2xl font-semibold line-through opacity-60 ${
+                                plan.isHighlight
+                                  ? "text-white/70"
+                                  : "text-[#6b4e2f]/50"
+                              }`}
+                            >
+                              Rp {plan.originalPrice?.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline justify-center gap-1">
+                            <span
+                              className={`text-2xl font-semibold ${
+                                plan.isHighlight
+                                  ? "text-white/90"
+                                  : "text-purple-600"
+                              }`}
+                            >
+                              Rp
+                            </span>
+                            <motion.span
+                              animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
+                              className={`text-5xl font-bold ${
+                                plan.isHighlight
+                                  ? "text-white"
+                                  : "text-purple-600"
+                              }`}
+                            >
+                              {plan.currentPrice?.toLocaleString("id-ID")}
+                            </motion.span>
+                          </div>
+                        </>
+                      ) : (
                         <div className="flex items-baseline justify-center gap-1">
                           <span
                             className={`text-2xl font-semibold ${
                               plan.isHighlight
                                 ? "text-white/90"
-                                : "text-purple-600"
+                                : "text-[#6b4e2f]"
                             }`}
                           >
                             Rp
@@ -282,44 +310,22 @@ export default function PricingSection() {
                             className={`text-5xl font-bold ${
                               plan.isHighlight
                                 ? "text-white"
-                                : "text-purple-600"
+                                : "bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]"
                             }`}
                           >
-                            {plan.currentPrice?.toLocaleString("id-ID")}
+                            {plan.price.toLocaleString("id-ID")}
                           </motion.span>
                         </div>
-                      </>
-                    ) : (
-                      <div className="flex items-baseline justify-center gap-1">
-                        <span
-                          className={`text-2xl font-semibold ${
-                            plan.isHighlight
-                              ? "text-white/90"
-                              : "text-[#6b4e2f]"
-                          }`}
-                        >
-                          Rp
-                        </span>
-                        <motion.span
-                          animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
-                          className={`text-5xl font-bold ${
-                            plan.isHighlight
-                              ? "text-white"
-                              : "bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]"
-                          }`}
-                        >
-                          {plan.price.toLocaleString("id-ID")}
-                        </motion.span>
-                      </div>
-                    )}
-                    <p
-                      className={`text-sm mt-1 ${
-                        plan.isHighlight ? "text-white/80" : "text-[#6b4e2f]/60"
-                      }`}
-                    >
-                      {plan.period}
-                    </p>
-                  </div>
+                      )}
+                      <p
+                        className={`text-sm mt-1 ${
+                          plan.isHighlight ? "text-white/80" : "text-[#6b4e2f]/60"
+                        }`}
+                      >
+                        {plan.period}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Features List */}
                   <ul className="space-y-4 mb-8 text-left">

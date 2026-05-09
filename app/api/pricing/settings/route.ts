@@ -26,7 +26,7 @@ export async function GET() {
 // UPDATE SETTINGS
 export async function PUT(req: Request) {
   try {
-    const { maxDisplay, whatsappNumber } = await req.json();
+    const { maxDisplay, whatsappNumber, showPrice } = await req.json();
 
     let settings = await prisma.pricingSettings.findFirst();
 
@@ -35,6 +35,7 @@ export async function PUT(req: Request) {
         data: {
           maxDisplay,
           whatsappNumber,
+          showPrice: showPrice !== undefined ? showPrice : true,
         },
       });
     } else {
@@ -43,6 +44,7 @@ export async function PUT(req: Request) {
         data: {
           maxDisplay,
           whatsappNumber,
+          showPrice: showPrice !== undefined ? showPrice : settings.showPrice,
         },
       });
     }
