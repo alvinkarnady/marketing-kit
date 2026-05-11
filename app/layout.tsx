@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Marketing Kit - Piawai Invitation",
+  title: "Piawai Invitation - Official Website",
   description: "Koleksi Tema Undangan Digital",
   icons: {
     icon: "/images/logo/3.svg",

@@ -188,7 +188,7 @@ export default function AboutSection() {
               {/* Main image */}
               <div className="relative w-full h-[300px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/about/frame 1.png"
+                  src="/images/about/frame-1.png"
                   alt="Elegant wedding setup"
                   fill
                   className="object-cover"
