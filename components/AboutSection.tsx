@@ -191,6 +191,7 @@ export default function AboutSection() {
                   src="/images/about/frame-1.png"
                   alt="Elegant wedding setup"
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />

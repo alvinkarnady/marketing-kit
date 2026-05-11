@@ -256,32 +256,30 @@ export default function SubmitTestimonialPage() {
 
           {/* Rating */}
           <div>
-            <Label className="mb-2 block">Rating</Label>
-            <div className="flex gap-2">
-              {[5, 4, 3, 2, 1].map((rating) => (
+            <Label className="mb-3 block text-sm font-medium">
+              Rating <span className="text-red-500">*</span>
+            </Label>
+            <div className="flex gap-2 sm:gap-4 items-center">
+              {[1, 2, 3, 4, 5].map((star) => (
                 <button
-                  key={rating}
+                  key={star}
                   type="button"
-                  onClick={() => setFormData({ ...formData, rating })}
-                  className={`flex items-center gap-1 px-4 py-2 rounded-lg border-2 transition-all ${
-                    formData.rating === rating
-                      ? "border-amber-400 bg-amber-50"
-                      : "border-gray-200 hover:border-amber-300"
-                  }`}
+                  onClick={() => setFormData({ ...formData, rating: star })}
+                  className="group transition-transform hover:scale-110 focus:outline-none"
                 >
-                  {[...Array(rating)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={16}
-                      className={
-                        formData.rating === rating
-                          ? "text-amber-400 fill-amber-400"
-                          : "text-gray-400"
-                      }
-                    />
-                  ))}
+                  <Star
+                    size={36}
+                    className={`transition-colors duration-200 ${
+                      formData.rating >= star
+                        ? "text-amber-400 fill-amber-400 drop-shadow-sm"
+                        : "text-gray-200 hover:text-amber-300"
+                    }`}
+                  />
                 </button>
               ))}
+              <span className="ml-4 text-sm font-medium text-gray-500">
+                {formData.rating} dari 5 bintang
+              </span>
             </div>
           </div>
 
@@ -333,20 +331,20 @@ export default function SubmitTestimonialPage() {
 
           {/* Theme Used */}
           <div>
-            <Label className="mb-2 block">Tema yang Digunakan (Optional)</Label>
+            <Label className="mb-3 block text-sm font-medium">Tema yang Digunakan (Optional)</Label>
             <Select
               value={formData.themeId || "none"}
               onValueChange={(val) =>
                 setFormData({ ...formData, themeId: val === "none" ? "" : val })
               }
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih tema" />
+              <SelectTrigger className="w-full h-12">
+                <SelectValue placeholder="Pilih tema" className="truncate" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Tidak memilih tema</SelectItem>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="none" className="text-gray-500 italic">Tidak memilih tema</SelectItem>
                 {themes.map((theme: any) => (
-                  <SelectItem key={theme.id} value={String(theme.id)}>
+                  <SelectItem key={theme.id} value={String(theme.id)} className="truncate">
                     {theme.name}
                   </SelectItem>
                 ))}

@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@next/font": "^14.2.15",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^5.16.2",
     "@prisma/engines": "^7.0.0",
