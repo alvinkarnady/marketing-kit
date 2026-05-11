@@ -21,8 +21,31 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Piawai Invitation - Phinisi Kit",
   description: "Koleksi Tema Undangan",
+  metadataBase: new URL("https://phinisi-invitation.vercel.app"), // Ganti dengan domain asli Anda nanti
   icons: {
-    icon: "/images/logo/3.png",
+    icon: "/images/logo/3.svg",
+  },
+  openGraph: {
+    title: "Piawai Invitation - Phinisi Kit",
+    description: "Koleksi Tema Undangan",
+    url: "https://phinisi-invitation.vercel.app",
+    siteName: "Piawai Invitation",
+    images: [
+      {
+        url: "/images/logo/3.png", // WAJIB PNG/JPG untuk share icon
+        width: 1200,
+        height: 630,
+        alt: "Piawai Invitation Logo",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Piawai Invitation - Phinisi Kit",
+    description: "Koleksi Tema Undangan",
+    images: ["/images/logo/3.png"],
   },
 };
 
