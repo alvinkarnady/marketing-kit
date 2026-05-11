@@ -88,10 +88,10 @@ export default function Navbar() {
               />
             </motion.div>
             <span className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400">
+              <span className="text-transparent drop-shadow-xl bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400">
                 Piawai
               </span>{" "}
-              <span className="text-white">Invitation</span>
+              <span className="text-white drop-shadow-xl">Invitation</span>
             </span>
           </div>
           <motion.div
