@@ -19,10 +19,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Piawai Invitation - Official Website",
-  description: "Koleksi Tema Undangan Digital",
+  title: "Piawai Invitation - Phinisi Kit",
+  description: "Koleksi Tema Undangan",
   icons: {
-    icon: "/images/logo/3.svg",
+    icon: "/images/logo/3.png",
   },
 };
 
