@@ -84,7 +84,7 @@ export default function Navbar() {
               <img
                 src="/images/logo/3.svg"
                 alt="Phinisi Kit"
-                // className="max-h-20"
+                className="drop-shadow-xl"
               />
             </motion.div>
             <span className="text-xl sm:text-2xl font-bold tracking-tight text-white">
