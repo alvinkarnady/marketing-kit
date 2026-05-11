@@ -19,8 +19,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Marketing Kit - Phinisi Tech",
-  description: "Koleksi Tema Undangan Online",
+  title: "Marketing Kit - Piawai Invitation",
+  description: "Koleksi Tema Undangan Digital",
+  icons: {
+    icon: "/images/logo/3.svg",
+  },
 };
 
 export default function RootLayout({

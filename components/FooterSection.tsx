@@ -94,13 +94,17 @@ export default function FooterSection() {
             viewport={{ once: true }}
             className="lg:col-span-2"
           >
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-0 mb-6">
               <motion.div
                 whileHover={{ rotate: 360, scale: 1.1 }}
                 transition={{ duration: 0.6 }}
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg"
+                className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
               >
-                <span className="text-white font-bold text-xl">P</span>
+                <img
+                  src="/images/logo/3.svg"
+                  alt="Phinisi Kit"
+                  // className="max-h-20"
+                />
               </motion.div>
               <div>
                 <h3 className="text-2xl font-bold">

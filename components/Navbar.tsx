@@ -12,7 +12,7 @@ export default function Navbar() {
   // Smooth scroll handler
   const handleSmoothScroll = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
+    href: string,
   ) => {
     e.preventDefault();
     const target = document.querySelector(href);
@@ -75,13 +75,17 @@ export default function Navbar() {
           className="relative group"
         >
           {/* Replace this div with <img src="/logo.png" alt="Phinisi Kit" className="h-10" /> when you have logo */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0">
             <motion.div
               whileHover={{ rotate: 360, scale: 1.1 }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 flex items-center justify-center shadow-lg"
+              className="max-w-15 max-h-15 rounded-full flex items-center justify-center"
             >
-              <span className="text-white font-bold text-lg">P</span>
+              <img
+                src="/images/logo/3.svg"
+                alt="Phinisi Kit"
+                // className="max-h-20"
+              />
             </motion.div>
             <span className="text-xl sm:text-2xl font-bold tracking-tight text-white">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400">

@@ -78,7 +78,7 @@ export default function Showcase() {
 
         const settingsRes = await fetch("/api/theme-settings");
         const settingsData = await settingsRes.json();
-        
+
         if (settingsData && settingsData.showPrice !== undefined) {
           setShowPrice(settingsData.showPrice);
         }
@@ -102,7 +102,7 @@ export default function Showcase() {
 
   // Filter themes
   const filteredThemes = themes.filter((t) =>
-    t.categories.some((cat) => cat.name === activeCategory)
+    t.categories.some((cat) => cat.name === activeCategory),
   );
 
   const { scrollYProgress } = useScroll({
@@ -117,7 +117,7 @@ export default function Showcase() {
     const message = `Halo, saya tertarik dengan tema undangan "${
       theme.name
     }" seharga Rp ${theme.price.toLocaleString(
-      "id-ID"
+      "id-ID",
     )}. Bisa info lebih lanjut?`;
     const phone = "6281248406898";
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
@@ -126,7 +126,7 @@ export default function Showcase() {
   // Count themes per category
   const getCategoryCount = (categoryName: string) => {
     return themes.filter((t) =>
-      t.categories.some((cat) => cat.name === categoryName)
+      t.categories.some((cat) => cat.name === categoryName),
     ).length;
   };
 
@@ -211,7 +211,7 @@ export default function Showcase() {
             {/* Split categories into 3 groups for mobile */}
             {[0, 1, 2].map((rowIndex) => {
               const rowCategories = categories.filter(
-                (_, index) => index % 3 === rowIndex
+                (_, index) => index % 3 === rowIndex,
               );
               if (rowCategories.length === 0) return null;
 

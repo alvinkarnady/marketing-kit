@@ -39,7 +39,7 @@ function AnimatedCounter({
           return () => clearInterval(timer);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
 
     if (ref.current) observer.observe(ref.current);
@@ -188,7 +188,7 @@ export default function AboutSection() {
               {/* Main image */}
               <div className="relative w-full h-[300px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/ring.jpg"
+                  src="/images/about/frame 1.png"
                   alt="Elegant wedding setup"
                   fill
                   className="object-cover"
@@ -203,7 +203,7 @@ export default function AboutSection() {
                   rotate: [0, 5, 0],
                 }}
                 transition={{ duration: 4, repeat: Infinity }}
-                className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl opacity-80 blur-xl"
+                className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl opacity-30 blur-xl"
               />
               <motion.div
                 animate={{
@@ -211,7 +211,7 @@ export default function AboutSection() {
                   rotate: [0, -5, 0],
                 }}
                 transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-                className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tl from-yellow-400 to-amber-500 rounded-full opacity-70 blur-2xl"
+                className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tl from-yellow-400 to-amber-500 rounded-full opacity-30 blur-2xl"
               />
             </motion.div>
 
@@ -222,7 +222,7 @@ export default function AboutSection() {
               transition={{ delay: 0.4, duration: 0.8 }}
               viewport={{ once: true }}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="absolute -bottom-8 -right-4 md:-right-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-3 md:p-8 border border-amber-100 max-w-xs"
+              className="absolute -bottom-8 -left-4 md:-left-8 bg-white/50 backdrop-blur-md rounded-2xl shadow-2xl p-3 md:p-8 border border-amber-100 max-w-xs"
             >
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0">
