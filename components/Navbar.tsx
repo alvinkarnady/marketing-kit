@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 
 export default function Navbar() {
@@ -63,7 +63,7 @@ export default function Navbar() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         scrolled
-          ? "backdrop-blur-lg bg-white/10 shadow-lg border-b border-white/10"
+          ? "backdrop-blur-lg bg-white/70 shadow-lg border-b border-amber-100"
           : "bg-transparent"
       }`}
     >
@@ -87,11 +87,11 @@ export default function Navbar() {
                 className="drop-shadow-xl"
               />
             </motion.div>
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              <span className="text-transparent drop-shadow-xl bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400">
+            <span className="text-xl sm:text-2xl font-bold tracking-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#b38b00]">
                 Piawai
               </span>{" "}
-              <span className="text-white drop-shadow-xl">Invitation</span>
+              <span className="text-[#3b2a1a]">Invitation</span>
             </span>
           </div>
           <motion.div
@@ -104,13 +104,13 @@ export default function Navbar() {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8">
-          <div className="flex items-center gap-6 text-white/90 font-medium">
+          <div className="flex items-center gap-6 text-[#6b5b45] font-medium">
             {links.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={(e) => handleSmoothScroll(e, link.href)}
-                className="relative py-2 hover:text-white transition-colors duration-300 group"
+                className="relative py-2 hover:text-[#3b2a1a] transition-colors duration-300 group"
               >
                 {link.name}
                 <motion.div
@@ -134,15 +134,15 @@ export default function Navbar() {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 group-hover:from-yellow-300 group-hover:to-amber-400 transition-all duration-300" />
             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <Phone size={16} className="relative z-10 text-purple-900" />
-            <span className="relative z-10 text-purple-900">Hubungi Kami</span>
+            <Phone size={16} className="relative z-10 text-[#3b2a1a]" />
+            <span className="relative z-10 text-[#3b2a1a]">Hubungi Kami</span>
           </motion.a>
         </div>
 
         {/* Mobile Menu Button */}
         <button
           onClick={() => setOpen(!open)}
-          className="md:hidden text-white focus:outline-none relative z-50"
+          className="md:hidden text-[#3b2a1a] focus:outline-none relative z-50"
         >
           <motion.div
             animate={{ rotate: open ? 90 : 0 }}
@@ -160,7 +160,7 @@ export default function Navbar() {
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.3 }}
-          className="md:hidden bg-white/10 backdrop-blur-lg border-t border-white/10"
+          className="md:hidden bg-white/90 backdrop-blur-lg border-t border-amber-100"
         >
           <div className="flex flex-col items-center py-6 space-y-4">
             {links.map((link, index) => (
@@ -173,8 +173,8 @@ export default function Navbar() {
                 transition={{ delay: index * 0.1 }}
                 className={`text-lg font-medium transition-colors duration-300 ${
                   activeSection === link.id
-                    ? "text-yellow-300"
-                    : "text-white/90 hover:text-white"
+                    ? "text-[#b38b00]"
+                    : "text-[#6b5b45] hover:text-[#3b2a1a]"
                 }`}
               >
                 {link.name}
@@ -186,7 +186,7 @@ export default function Navbar() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-yellow-400 to-amber-400 text-purple-900 shadow-lg mt-2"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-yellow-400 to-amber-400 text-[#3b2a1a] shadow-lg mt-2"
             >
               <Phone size={18} />
               Hubungi Kami

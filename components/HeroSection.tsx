@@ -1,21 +1,95 @@
 "use client";
 
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useMotionValue,
-  useSpring,
-} from "framer-motion";
-import {
-  ArrowRight,
-  ArrowDown,
-  Star,
-  Users,
-  Heart,
-  Sparkles,
-} from "lucide-react";
-import { useEffect, useState, useRef, JSX } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, ArrowDown, Star, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+interface HeroTheme {
+  id: number;
+  name: string;
+  image: string | null;
+}
+
+// Split items into n columns round-robin
+function splitColumns<T>(items: T[], count: number): T[][] {
+  const cols: T[][] = Array.from({ length: count }, () => []);
+  items.forEach((item, i) => cols[i % count].push(item));
+  return cols;
+}
+
+// Keyframes with smooth holds: the column glides, eases to a stop, then continues
+function buildPausedKeyframes(direction: "up" | "down") {
+  const stops = ["0%", "-14%", "-14%", "-27%", "-27%", "-38%", "-38%", "-50%"];
+  const frames = direction === "up" ? stops : [...stops].reverse();
+  // Uneven timing: longer segments are travel, equal pairs are pauses
+  const times = [0, 0.16, 0.28, 0.44, 0.55, 0.72, 0.84, 1];
+  return { frames, times };
+}
+
+function MarqueeColumn({
+  images,
+  direction,
+  duration,
+  zoomDelay,
+  className = "flex-1",
+}: {
+  images: HeroTheme[];
+  direction: "up" | "down";
+  duration: number;
+  zoomDelay: number;
+  className?: string;
+}) {
+  // Duplicate list so the loop is seamless at -50%
+  const list = [...images, ...images];
+  const { frames, times } = buildPausedKeyframes(direction);
+
+  return (
+    <div className={`${className} overflow-hidden`}>
+      <motion.div
+        className="flex flex-col"
+        animate={{
+          y: frames,
+          scale: [1, 1, 1.05, 1.05, 1, 1],
+        }}
+        transition={{
+          y: {
+            duration,
+            times,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+          scale: {
+            duration: duration / 2,
+            times: [0, 0.35, 0.45, 0.55, 0.65, 1],
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: zoomDelay,
+          },
+        }}
+        style={{ transformOrigin: "center center" }}
+      >
+        {list.map((theme, i) => (
+          <div
+            key={`${theme.id}-${i}`}
+            className="relative rounded-xl md:rounded-2xl overflow-hidden border border-amber-100 shadow-md shadow-amber-100/50 bg-white aspect-[9/16] w-full mb-3 md:mb-4"
+          >
+            {theme.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={theme.image}
+                alt={theme.name}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-amber-50 to-yellow-100 animate-pulse" />
+            )}
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
 
 export default function HeroSection() {
   const ref = useRef(null);
@@ -24,76 +98,39 @@ export default function HeroSection() {
     offset: ["start start", "end start"],
   });
 
-  // Parallax transforms
-  const yText = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const yButton = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const yText = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
 
-  // Mouse parallax
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const smoothMouseX = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const smoothMouseY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+  const [themes, setThemes] = useState<HeroTheme[]>([]);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      const { innerWidth, innerHeight } = window;
-      mouseX.set((clientX - innerWidth / 2) / 50);
-      mouseY.set((clientY - innerHeight / 2) / 50);
-    };
+    async function fetchThemes() {
+      try {
+        const [settingsRes, themesRes] = await Promise.all([
+          fetch("/api/theme-settings"),
+          fetch("/api/themes"),
+        ]);
+        const settingsData = await settingsRes.json();
+        const data = await themesRes.json();
+        const heroPreviewImage = settingsData?.heroPreviewImage === 2 ? 2 : 1;
+        const previewKey = heroPreviewImage === 2 ? "image2" : "image";
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+        const withImages = (data.data || [])
+          .filter((t: HeroTheme & { image2?: string | null }) => t[previewKey])
+          .map((t: HeroTheme & { image2?: string | null }) => ({
+            id: t.id,
+            name: t.name,
+            image: t[previewKey] as string,
+          }));
 
-  // Animated particles
-  const [particles, setParticles] = useState<JSX.Element[]>([]);
-
-  useEffect(() => {
-    const particleCount = 60;
-    const generatedParticles = [...Array(particleCount)].map((_, i) => {
-      const size = Math.random() * 6 + 2;
-      const opacity = 0.1 + Math.random() * 0.3;
-      const duration = 2 + Math.random() * 3;
-      const isGold = Math.random() > 0.5;
-
-      return (
-        <motion.span
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            backgroundColor: isGold
-              ? "rgba(255, 215, 0, 0.4)"
-              : "rgba(255, 255, 255, 0.3)",
-            width: `${size}px`,
-            height: `${size}px`,
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            opacity,
-            boxShadow: isGold ? "0 0 10px rgba(255, 215, 0, 0.3)" : "none",
-          }}
-          animate={{
-            y: [0, -60, 0],
-            x: [0, Math.random() * 40 - 20, 0],
-            opacity: [opacity, opacity + 0.3, opacity],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration,
-            repeat: Infinity,
-            delay: Math.random() * 3,
-            ease: "easeInOut",
-          }}
-        />
-      );
-    });
-
-    setParticles(generatedParticles);
+        setThemes(withImages);
+      } catch (error) {
+        console.error("Failed to fetch themes:", error);
+      }
+    }
+    fetchThemes();
   }, []);
 
-  // Smooth scroll to next section
   const scrollToGallery = () => {
     const gallery = document.getElementById("gallery");
     if (gallery) {
@@ -101,216 +138,179 @@ export default function HeroSection() {
     }
   };
 
+  // Placeholder skeletons keep the marquee alive before data arrives
+  let marqueeItems: HeroTheme[] =
+    themes.length > 0
+      ? themes
+      : Array.from({ length: 9 }, (_, i) => ({
+          id: -(i + 1),
+          name: "placeholder",
+          image: null,
+        }));
+
+  // Repeat items so each column has enough cards for a seamless loop
+  while (marqueeItems.length < 9) {
+    marqueeItems = [...marqueeItems, ...marqueeItems];
+  }
+
+  const columns = splitColumns(marqueeItems, 3);
+  const durations = [28, 34, 24];
+
   return (
     <section
       id="home"
       ref={ref}
-      className="relative flex flex-col items-center justify-center text-center min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 text-white overflow-hidden px-6"
+      className="relative min-h-screen bg-gradient-to-b from-white via-amber-50/40 to-white text-[#3b2a1a] overflow-hidden"
     >
-      {/* Background Image with Overlay */}
-      <div
-        className="absolute inset-0 bg-cover bg-center opacity-20"
-        style={{ backgroundImage: "url('/images/ring.jpg')" }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-purple-900/60 to-indigo-900/40" />
+      {/* Soft static amber accents */}
+      <div className="absolute top-[-10%] right-[-5%] w-[420px] h-[420px] bg-gradient-to-br from-amber-200/25 to-yellow-300/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[420px] h-[420px] bg-gradient-to-tr from-amber-300/15 to-yellow-200/25 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Gold accent gradient overlays */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-yellow-400/20 to-amber-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-amber-400/20 to-yellow-500/10 rounded-full blur-3xl" />
-
-      {/* Decorative Blobs with parallax */}
-      <motion.div
-        style={{ x: smoothMouseX, y: smoothMouseY }}
-        className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-gradient-to-br from-purple-400/30 to-pink-500/20 rounded-full blur-3xl"
-        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.4, 0.3] }}
-        transition={{ duration: 8, repeat: Infinity }}
+      {/* Floral line-art accents (Fairytale style) — white bg blended away via multiply */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/floral-accent.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute left-20 top-50 w-[640px] md:w-[800px] lg:w-[1000px] mix-blend-multiply opacity-40 pointer-events-none select-none -translate-x-[30%] -translate-y-[10%] rotate-40"
       />
-      <motion.div
-        style={{
-          x: useTransform(smoothMouseX, (x) => -x),
-          y: useTransform(smoothMouseY, (y) => -y),
-        }}
-        className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-gradient-to-tl from-blue-400/30 to-indigo-500/20 rounded-full blur-3xl"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 10, repeat: Infinity }}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/floral-accent.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute right-20 bottom-0 w-[640px] md:w-[800px] lg:w-[1000px] mix-blend-multiply opacity-40 pointer-events-none select-none scale-x-[-1] translate-x-[30%] translate-y-[15%] rotate-x-40"
       />
 
-      {/* Animated Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles}
-      </div>
-
-      {/* Floating decorative shapes */}
-      <motion.div
-        style={{ x: smoothMouseX, y: smoothMouseY }}
-        className="absolute top-20 left-20 w-20 h-20 border-2 border-yellow-300/30 rounded-full"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.div
-        style={{
-          x: useTransform(smoothMouseX, (x) => -x * 0.5),
-          y: useTransform(smoothMouseY, (y) => -y * 0.5),
-        }}
-        className="absolute bottom-40 right-32 w-16 h-16 border-2 border-amber-300/40 rounded-lg"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-      />
-
-      {/* Content */}
-      <motion.div
-        style={{ y: yText, opacity, scale }}
-        className="relative z-10 max-w-4xl"
-      >
-        {/* Badge */}
+      <div className="relative z-10 max-w-7xl mx-auto grid md:grid-cols-2 gap-10 md:gap-8 items-center min-h-screen px-6 pt-28 pb-16 md:py-0">
+        {/* ---------------- LEFT: Text ---------------- */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-6"
+          style={{ y: yText, opacity }}
+          className="text-center md:text-left"
         >
-          <Sparkles className="w-4 h-4 text-yellow-300" />
-          <span className="text-xs sm:text-sm font-medium text-white/90">
-            Undangan Digital Premium
-          </span>
-        </motion.div>
-
-        <motion.h1
-          className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          Buat Undangan Digital <br />
-          <span className="relative inline-block">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500">
-              Modern & Elegan
-            </span>
-            <motion.div
-              className="absolute -inset-1 bg-gradient-to-r from-yellow-300/20 via-amber-400/20 to-yellow-500/20 blur-lg -z-10"
-              animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          </span>
-        </motion.h1>
-
-        <motion.p
-          className="text-white/80 text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 leading-relaxed max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          Ciptakan pengalaman undangan digital yang berkesan — dengan desain
-          menarik, fitur interaktif, dan kemudahan berbagi hanya dengan satu
-          tautan.
-        </motion.p>
-
-        {/* Trust Indicators */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 mb-10 sm:mb-12"
-        >
-          <div className="flex items-center gap-2 text-white/90">
-            <div className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-              <Users className="w-4 h-4 text-yellow-300 mr-1.5" />
-              <span className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">
-                500+
-              </span>
-            </div>
-            <span className="text-xs sm:text-sm md:text-base lg:text-lg">
-              Pasangan Bahagia
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 text-white/90">
-            <div className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-              <div className="flex items-center mr-1.5">
+          {/* Rating & trust row */}
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-col sm:flex-row items-center md:items-start sm:justify-center md:justify-start gap-2 sm:gap-3 mb-5"
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className="w-3 h-3 text-yellow-400 fill-yellow-400"
+                    className="w-4 h-4 text-[#d4af37] fill-[#d4af37]"
                   />
                 ))}
               </div>
-              <span className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">
-                4.9
-              </span>
+              <span className="text-sm font-semibold">Rated 4.9/5</span>
             </div>
-            <span className="text-xs sm:text-sm md:text-base lg:text-lg">
-              Rating
+            <span className="text-sm text-[#6b5b45]">
+              Dipercaya 500+ pasangan bahagia
             </span>
-          </div>
+          </motion.div>
 
-          <div className="flex items-center gap-2 text-white/90">
-            <div className="flex items-center bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-              <Heart className="w-4 h-4 text-pink-400 mr-1.5 fill-pink-400" />
-              <span className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">
-                100%
-              </span>
-            </div>
-            <span className="text-xs sm:text-sm md:text-sm lg:text-base">
-              Kepuasan
-            </span>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      {/* CTA Buttons */}
-      <motion.div
-        style={{ y: yButton, opacity }}
-        className="relative z-10 flex flex-col sm:flex-row gap-4"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8 }}
-      >
-        <motion.a
-          href="#gallery"
-          onClick={(e) => {
-            e.preventDefault();
-            scrollToGallery();
-          }}
-          whileHover={{
-            scale: 1.05,
-            boxShadow: "0 20px 40px rgba(255, 215, 0, 0.3)",
-          }}
-          whileTap={{ scale: 0.95 }}
-          className="group relative inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-md overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500" />
-          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <span className="relative z-10 text-purple-900">Lihat Tema</span>
-          <ArrowRight className="relative z-10 w-5 h-5 text-purple-900 group-hover:translate-x-1 transition-transform" />
-        </motion.a>
-
-        <motion.a
-          href="#contact"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="group inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-sm sm:text-md border-2 border-white/30 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all"
-        >
-          <span className="text-white">Konsultasi Gratis</span>
-          <motion.span
-            animate={{ x: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 mb-6"
           >
-            →
-          </motion.span>
-        </motion.a>
-      </motion.div>
+            <Sparkles className="w-4 h-4 text-[#b38b00]" />
+            <span className="text-xs sm:text-sm font-medium text-[#7a5c2e]">
+              Undangan Digital Premium
+            </span>
+          </motion.div>
+
+          <motion.h1
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Buat Undangan Digital{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#b38b00]">
+              Modern & Elegan
+            </span>
+          </motion.h1>
+
+          <motion.p
+            className="text-[#6b5b45] text-sm sm:text-base md:text-lg mb-8 sm:mb-10 leading-relaxed max-w-xl mx-auto md:mx-0"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+          >
+            Ciptakan pengalaman undangan digital yang berkesan — dengan desain
+            menarik, fitur interaktif, dan kemudahan berbagi hanya dengan satu
+            tautan.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            className="flex flex-row flex-wrap items-center justify-center md:justify-start gap-2.5 sm:gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <motion.a
+              href="#gallery"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToGallery();
+              }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="group inline-flex items-center justify-center gap-1.5 px-4 sm:px-8 py-2.5 sm:py-4 rounded-full font-semibold text-xs sm:text-base whitespace-nowrap bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-[#3b2a1a] shadow-lg shadow-amber-200/60 hover:shadow-xl hover:shadow-amber-200/80 transition-shadow"
+            >
+              Lihat Tema
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+            </motion.a>
+
+            <motion.a
+              href="#contact"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center justify-center px-4 sm:px-8 py-2.5 sm:py-4 rounded-full font-semibold text-xs sm:text-base whitespace-nowrap border-2 border-amber-300 text-[#3b2a1a] bg-white/60 hover:bg-amber-50 hover:border-amber-400 transition-colors"
+            >
+              Konsultasi Gratis
+            </motion.a>
+          </motion.div>
+        </motion.div>
+
+        {/* ---------------- RIGHT: Vertical marquee ---------------- */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="relative h-[35vh] md:h-[78vh] flex gap-2.5 md:gap-4 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]"
+        >
+          {columns.map((col, i) =>
+            col.length > 0 ? (
+              <MarqueeColumn
+                key={i}
+                images={col}
+                direction={i % 2 === 0 ? "up" : "down"}
+                duration={durations[i % durations.length]}
+                zoomDelay={i * 5}
+              />
+            ) : null,
+          )}
+        </motion.div>
+      </div>
 
       {/* Scroll Indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+        transition={{ delay: 1.2 }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 hidden md:block"
       >
         <motion.button
           onClick={scrollToGallery}
-          className="flex flex-col items-center gap-2 text-white/60 hover:text-white/90 transition-colors cursor-pointer"
-          animate={{ y: [0, 10, 0] }}
+          className="flex flex-col items-center gap-2 text-[#a08a68] hover:text-[#3b2a1a] transition-colors cursor-pointer"
+          animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
           <span className="text-xs font-medium tracking-wider uppercase">

@@ -45,6 +45,7 @@ export async function POST(req: Request) {
     const price = Number(form.get("price"));
     const demoUrl = form.get("demoUrl") as string;
     const imageFile = form.get("image") as File | null;
+    const image2File = form.get("image2") as File | null;
 
     // Get multiple category IDs
     const categoryIdsRaw = form.get("categoryIds") as string;
@@ -90,6 +91,7 @@ export async function POST(req: Request) {
     }
 
     let imagePath: string | null = null;
+    let image2Path: string | null = null;
     // Handle image upload
     if (imageFile && imageFile.size > 0) {
       const bytes = await imageFile.arrayBuffer();
@@ -99,6 +101,12 @@ export async function POST(req: Request) {
       imagePath = await uploadToCloudinary(buffer, "marketing-kit/themes");
     }
 
+    if (image2File && image2File.size > 0) {
+      const bytes = await image2File.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      image2Path = await uploadToCloudinary(buffer, "marketing-kit/themes");
+    }
+
     // Create theme with categories and tags
     const theme = await prisma.theme.create({
       data: {
@@ -106,6 +114,7 @@ export async function POST(req: Request) {
         price,
         demoUrl,
         image: imagePath,
+        image2: image2Path,
         categories: {
           create: categoryIds.map((categoryId) => ({
             categoryId,

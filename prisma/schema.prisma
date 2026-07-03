@@ -21,6 +21,7 @@ model Theme {
   id        Int      @id @default(autoincrement())
   name      String
   image     String?
+  image2    String?
   demoUrl   String
   price     Int
   createdAt DateTime @default(now())
@@ -201,8 +202,9 @@ model ServiceSettings {
 }
 
 model ThemeSettings {
-  id              Int      @id @default(autoincrement())
-  showPrice       Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  showPrice        Boolean  @default(true)
+  heroPreviewImage Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

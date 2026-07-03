@@ -44,6 +44,7 @@ export default function ThemesPage() {
     categoryIds: [] as number[],
     tagIds: [] as number[],
     image: null as File | null,
+    image2: null as File | null,
   });
 
   // EDIT Theme
@@ -56,6 +57,7 @@ export default function ThemesPage() {
 
   // THEME SETTINGS
   const [showPrice, setShowPrice] = useState(true);
+  const [heroPreviewImage, setHeroPreviewImage] = useState<1 | 2>(1);
 
   // BULK PRICE UPDATE
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -86,6 +88,9 @@ export default function ThemesPage() {
       const settingsData = await resSettings.json();
       if (settingsData && settingsData.showPrice !== undefined) {
         setShowPrice(settingsData.showPrice);
+      }
+      if (settingsData && settingsData.heroPreviewImage !== undefined) {
+        setHeroPreviewImage(settingsData.heroPreviewImage === 2 ? 2 : 1);
       }
     } catch (error) {
       console.error("Failed to load data:", error);
@@ -273,6 +278,7 @@ export default function ThemesPage() {
     fd.append("tagIds", JSON.stringify(addData.tagIds));
 
     if (addData.image) fd.append("image", addData.image);
+    if (addData.image2) fd.append("image2", addData.image2);
 
     await fetch("/api/themes", {
       method: "POST",
@@ -287,6 +293,7 @@ export default function ThemesPage() {
       categoryIds: [],
       tagIds: [],
       image: null,
+      image2: null,
     });
     loadData();
   };
@@ -299,6 +306,7 @@ export default function ThemesPage() {
       categoryIds: t.categories.map((c: any) => c.id),
       tagIds: t.tags.map((tag: any) => tag.id),
       image: t.image,
+      image2: t.image2,
     });
     setEditModal(true);
   };
@@ -323,6 +331,12 @@ export default function ThemesPage() {
       fd.append("keepExistingImage", "true");
     }
 
+    if (editData.image2 instanceof File) {
+      fd.append("image2", editData.image2);
+    } else {
+      fd.append("keepExistingImage2", "true");
+    }
+
     await fetch(`/api/themes/${editData.id}`, {
       method: "PUT",
       body: fd,
@@ -340,6 +354,20 @@ export default function ThemesPage() {
 
     setDeleteModal(false);
     loadData();
+  };
+
+  const handleHeroPreviewChange = async (value: 1 | 2) => {
+    setHeroPreviewImage(value);
+    try {
+      await fetch("/api/theme-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heroPreviewImage: value }),
+      });
+    } catch (err) {
+      console.error("Failed to update hero preview setting", err);
+      setHeroPreviewImage(value === 1 ? 2 : 1);
+    }
   };
 
   // TOGGLE SHOW PRICE
@@ -405,20 +433,49 @@ export default function ThemesPage() {
       </div>
 
       {/* THEME SETTINGS BAR */}
-      <div className="bg-white border rounded-lg p-4 mb-6 flex items-center justify-between">
+      <div className="bg-white border rounded-lg p-4 mb-6 space-y-4">
         <div>
           <h2 className="text-lg font-semibold">Theme Settings</h2>
-          <p className="text-sm text-gray-500">Configure global settings for themes on the landing page.</p>
+          <p className="text-sm text-gray-500">
+            Configure global settings for themes on the landing page.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Checkbox 
-            id="show-price" 
-            checked={showPrice} 
-            onCheckedChange={handleToggleShowPrice} 
-          />
-          <Label htmlFor="show-price" className="cursor-pointer">
-            Show Theme Prices on Landing Page
-          </Label>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="show-price"
+              checked={showPrice}
+              onCheckedChange={handleToggleShowPrice}
+            />
+            <Label htmlFor="show-price" className="cursor-pointer">
+              Show Theme Prices on Landing Page
+            </Label>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Label className="text-sm font-medium text-gray-700">
+              Hero Marquee Preview:
+            </Label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="radio"
+                  name="heroPreview"
+                  checked={heroPreviewImage === 1}
+                  onChange={() => handleHeroPreviewChange(1)}
+                />
+                Preview 1 (Galeri)
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="radio"
+                  name="heroPreview"
+                  checked={heroPreviewImage === 2}
+                  onChange={() => handleHeroPreviewChange(2)}
+                />
+                Preview 2 (Hero)
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -559,17 +616,24 @@ export default function ThemesPage() {
                     />
                   </td>
                   <td className="p-3">
-                    {t.image ? (
-                      <img
-                        src={t.image}
-                        alt={t.name}
-                        className="w-20 h-20 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center">
-                        <span className="text-xs text-gray-400">No image</span>
-                      </div>
-                    )}
+                    <div className="relative inline-block">
+                      {t.image ? (
+                        <img
+                          src={t.image}
+                          alt={t.name}
+                          className="w-20 h-20 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center">
+                          <span className="text-xs text-gray-400">No image</span>
+                        </div>
+                      )}
+                      {t.image2 && (
+                        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">
+                          P2
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   <td className="p-3 font-medium">{t.name}</td>
@@ -738,13 +802,29 @@ export default function ThemesPage() {
               )}
             </div>
 
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e: any) =>
-                setAddData({ ...addData, image: e.target.files[0] })
-              }
-            />
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Preview 1 (Galeri)</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e: any) =>
+                  setAddData({ ...addData, image: e.target.files[0] })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                Preview 2 (Hero Marquee)
+              </Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e: any) =>
+                  setAddData({ ...addData, image2: e.target.files[0] })
+                }
+              />
+            </div>
 
             <Button onClick={createTheme} className="w-full">
               Create Theme
@@ -840,25 +920,55 @@ export default function ThemesPage() {
 
             {editData.image && typeof editData.image === "string" && (
               <div className="border rounded p-3">
-                <p className="text-sm text-gray-600 mb-2">Current Image:</p>
+                <p className="text-sm text-gray-600 mb-2">Current Preview 1:</p>
                 <img
                   src={editData.image}
-                  alt="Current"
+                  alt="Preview 1"
                   className="w-32 h-32 object-cover rounded"
                 />
               </div>
             )}
 
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e: any) =>
-                setEditData({ ...editData, image: e.target.files[0] })
-              }
-            />
-            <p className="text-xs text-gray-500">
-              Leave empty to keep current image
-            </p>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Preview 1 (Galeri)</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e: any) =>
+                  setEditData({ ...editData, image: e.target.files[0] })
+                }
+              />
+              <p className="text-xs text-gray-500">
+                Leave empty to keep current preview 1
+              </p>
+            </div>
+
+            {editData.image2 && typeof editData.image2 === "string" && (
+              <div className="border rounded p-3">
+                <p className="text-sm text-gray-600 mb-2">Current Preview 2:</p>
+                <img
+                  src={editData.image2}
+                  alt="Preview 2"
+                  className="w-32 h-32 object-cover rounded"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                Preview 2 (Hero Marquee)
+              </Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e: any) =>
+                  setEditData({ ...editData, image2: e.target.files[0] })
+                }
+              />
+              <p className="text-xs text-gray-500">
+                Leave empty to keep current preview 2
+              </p>
+            </div>
 
             <Button onClick={updateTheme} className="w-full">
               Save Changes

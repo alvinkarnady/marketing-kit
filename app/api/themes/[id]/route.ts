@@ -55,7 +55,9 @@ export async function PUT(
     const price = Number(form.get("price"));
     const demoUrl = form.get("demoUrl") as string;
     const imageFile = form.get("image") as File | null;
+    const image2File = form.get("image2") as File | null;
     const keepExistingImage = form.get("keepExistingImage") === "true";
+    const keepExistingImage2 = form.get("keepExistingImage2") === "true";
 
     // Get multiple category IDs
     const categoryIdsRaw = form.get("categoryIds") as string;
@@ -116,6 +118,25 @@ export async function PUT(
       imagePath = null;
     }
 
+    // Handle image2 upload
+    let image2Path: string | null = existingTheme.image2;
+
+    if (image2File && image2File.size > 0) {
+      if (existingTheme.image2) {
+        await deleteFromCloudinary(existingTheme.image2);
+      }
+
+      const bytes = await image2File.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      image2Path = await uploadToCloudinary(buffer, "marketing-kit/themes");
+    } else if (!keepExistingImage2) {
+      if (existingTheme.image2) {
+        await deleteFromCloudinary(existingTheme.image2);
+      }
+      image2Path = null;
+    }
+
     // Update theme
     const updated = await prisma.theme.update({
       where: { id: Number(id) },
@@ -124,6 +145,7 @@ export async function PUT(
         price,
         demoUrl,
         image: imagePath,
+        image2: image2Path,
         // Replace all categories
         categories: {
           deleteMany: {},
@@ -176,9 +198,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Theme not found" }, { status: 404 });
     }
 
-    // Delete image from Cloudinary if exists
+    // Delete images from Cloudinary if exist
     if (theme.image) {
       await deleteFromCloudinary(theme.image);
+    }
+    if (theme.image2) {
+      await deleteFromCloudinary(theme.image2);
     }
 
     // Delete theme from database (cascade will handle relations)
