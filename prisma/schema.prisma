@@ -18,14 +18,16 @@ model User {
 }
 
 model Theme {
-  id        Int      @id @default(autoincrement())
-  name      String
-  image     String?
-  image2    String?
-  demoUrl   String
-  price     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String
+  image        String?
+  image2       String?
+  imageActive  Boolean  @default(true)
+  image2Active Boolean  @default(true)
+  demoUrl      String
+  price        Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   categories    ThemeCategory[]
   tags          ThemeTag[]
@@ -46,6 +48,7 @@ model ThemeCategory {
   id         Int      @id @default(autoincrement())
   themeId    Int
   categoryId Int
+  priority   Int      @default(0)
   createdAt  DateTime @default(now())
 
   theme    Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
@@ -54,6 +57,7 @@ model ThemeCategory {
   @@unique([themeId, categoryId])
   @@index([themeId])
   @@index([categoryId])
+  @@index([categoryId, priority])
 }
 
 model Tag {

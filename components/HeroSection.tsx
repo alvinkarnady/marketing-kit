@@ -113,14 +113,18 @@ export default function HeroSection() {
         const settingsData = await settingsRes.json();
         const data = await themesRes.json();
         const heroPreviewImage = settingsData?.heroPreviewImage === 2 ? 2 : 1;
-        const previewKey = heroPreviewImage === 2 ? "image2" : "image";
 
         const withImages = (data.data || [])
-          .filter((t: HeroTheme & { image2?: string | null }) => t[previewKey])
+          .filter((t: HeroTheme & { image2?: string | null; imageActive?: boolean; image2Active?: boolean }) => {
+            if (heroPreviewImage === 2) {
+              return t.image2 && t.image2Active !== false;
+            }
+            return t.image && t.imageActive !== false;
+          })
           .map((t: HeroTheme & { image2?: string | null }) => ({
             id: t.id,
             name: t.name,
-            image: t[previewKey] as string,
+            image: (heroPreviewImage === 2 ? t.image2 : t.image) as string,
           }));
 
         setThemes(withImages);

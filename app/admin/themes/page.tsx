@@ -2,6 +2,23 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,11 +36,75 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, FolderKanban, X, Tag, DollarSign } from "lucide-react";
+import {
+  Search,
+  Filter,
+  FolderKanban,
+  X,
+  Tag,
+  DollarSign,
+  ListOrdered,
+  GripVertical,
+} from "lucide-react";
 
 type BulkScope = "selected" | "category" | "all";
 type BulkMode = "fixed" | "percentage" | "amount";
 type BulkDirection = "increase" | "decrease";
+
+function SortableThemeRow({
+  themeId,
+  theme,
+  index,
+}: {
+  themeId: number;
+  theme: { name: string; image?: string | null };
+  index: number;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: themeId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 p-2 rounded-md bg-gray-50 border"
+    >
+      <button
+        type="button"
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none p-1"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={18} />
+      </button>
+      <span className="w-6 text-sm font-mono text-gray-500 text-center">
+        {index + 1}
+      </span>
+      {theme.image ? (
+        <img
+          src={theme.image}
+          alt={theme.name}
+          className="w-10 h-10 rounded object-cover"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded bg-gray-200" />
+      )}
+      <span className="flex-1 text-sm font-medium truncate">{theme.name}</span>
+    </div>
+  );
+}
 
 export default function ThemesPage() {
   const router = useRouter();
@@ -45,6 +126,8 @@ export default function ThemesPage() {
     tagIds: [] as number[],
     image: null as File | null,
     image2: null as File | null,
+    imageActive: true,
+    image2Active: true,
   });
 
   // EDIT Theme
@@ -68,6 +151,107 @@ export default function ThemesPage() {
   const [bulkDirection, setBulkDirection] = useState<BulkDirection>("increase");
   const [bulkCategoryId, setBulkCategoryId] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
+
+  // THEME ORDER PER CATEGORY
+  const [orderModal, setOrderModal] = useState(false);
+  const [orderCategoryId, setOrderCategoryId] = useState("");
+  const [orderedThemeIds, setOrderedThemeIds] = useState<number[]>([]);
+  const [orderLoading, setOrderLoading] = useState(false);
+
+  const themesForOrderCategory = useMemo(() => {
+    if (!orderCategoryId) return [];
+    const catId = Number(orderCategoryId);
+    return themes
+      .filter((t: any) => t.categories.some((c: any) => c.id === catId))
+      .sort((a: any, b: any) => {
+        const pa =
+          a.categories.find((c: any) => c.id === catId)?.priority ?? 0;
+        const pb =
+          b.categories.find((c: any) => c.id === catId)?.priority ?? 0;
+        if (pa !== pb) return pa - pb;
+        return b.id - a.id;
+      });
+  }, [themes, orderCategoryId]);
+
+  useEffect(() => {
+    setOrderedThemeIds(themesForOrderCategory.map((t: any) => t.id));
+  }, [themesForOrderCategory]);
+
+  const openOrderModal = () => {
+    setOrderCategoryId(categories[0] ? String(categories[0].id) : "");
+    setOrderModal(true);
+  };
+
+  const orderSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleOrderDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setOrderedThemeIds((items) => {
+      const oldIndex = items.indexOf(Number(active.id));
+      const newIndex = items.indexOf(Number(over.id));
+      if (oldIndex === -1 || newIndex === -1) return items;
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
+  const toggleImageStatus = async (
+    themeId: number,
+    field: "imageActive" | "image2Active",
+    value: boolean
+  ) => {
+    try {
+      const res = await fetch(`/api/themes/${themeId}/image-status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Failed to update image status");
+        return;
+      }
+      loadData();
+    } catch (err) {
+      console.error("Failed to toggle image status:", err);
+    }
+  };
+
+  const saveThemeOrder = async () => {
+    if (!orderCategoryId || orderedThemeIds.length === 0) return;
+
+    setOrderLoading(true);
+    try {
+      const res = await fetch("/api/themes/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryId: Number(orderCategoryId),
+          orderedThemeIds,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to save order");
+        return;
+      }
+
+      setOrderModal(false);
+      loadData();
+    } catch (err) {
+      console.error("Failed to save theme order:", err);
+      alert("Failed to save order");
+    } finally {
+      setOrderLoading(false);
+    }
+  };
 
   // LOAD DATA
   const loadData = useCallback(async () => {
@@ -279,6 +463,8 @@ export default function ThemesPage() {
 
     if (addData.image) fd.append("image", addData.image);
     if (addData.image2) fd.append("image2", addData.image2);
+    fd.append("imageActive", String(addData.imageActive));
+    fd.append("image2Active", String(addData.image2Active));
 
     await fetch("/api/themes", {
       method: "POST",
@@ -294,6 +480,8 @@ export default function ThemesPage() {
       tagIds: [],
       image: null,
       image2: null,
+      imageActive: true,
+      image2Active: true,
     });
     loadData();
   };
@@ -307,6 +495,8 @@ export default function ThemesPage() {
       tagIds: t.tags.map((tag: any) => tag.id),
       image: t.image,
       image2: t.image2,
+      imageActive: t.imageActive !== false,
+      image2Active: t.image2Active !== false,
     });
     setEditModal(true);
   };
@@ -336,6 +526,9 @@ export default function ThemesPage() {
     } else {
       fd.append("keepExistingImage2", "true");
     }
+
+    fd.append("imageActive", String(editData.imageActive !== false));
+    fd.append("image2Active", String(editData.image2Active !== false));
 
     await fetch(`/api/themes/${editData.id}`, {
       method: "PUT",
@@ -522,6 +715,10 @@ export default function ThemesPage() {
             <DollarSign size={18} />
             Bulk Update Price
           </Button>
+          <Button variant="outline" onClick={openOrderModal} className="gap-2">
+            <ListOrdered size={18} />
+            Atur Urutan
+          </Button>
           <Button onClick={() => setAddModal(true)}>Add Theme</Button>
         </div>
 
@@ -599,6 +796,8 @@ export default function ThemesPage() {
                 Categories
               </th>
               <th className="p-3 text-left text-sm font-semibold">Tags</th>
+              <th className="p-3 text-center text-sm font-semibold">P1</th>
+              <th className="p-3 text-center text-sm font-semibold">P2</th>
               <th className="p-3 text-left text-sm font-semibold">Demo URL</th>
               <th className="p-3 text-left text-sm font-semibold">Action</th>
             </tr>
@@ -661,6 +860,26 @@ export default function ThemesPage() {
                       )}
                     </div>
                   </td>
+                  <td className="p-3 text-center">
+                    <Checkbox
+                      checked={t.imageActive !== false}
+                      disabled={!t.image}
+                      onCheckedChange={(checked) =>
+                        toggleImageStatus(t.id, "imageActive", !!checked)
+                      }
+                      aria-label={`Toggle preview 1 for ${t.name}`}
+                    />
+                  </td>
+                  <td className="p-3 text-center">
+                    <Checkbox
+                      checked={t.image2Active !== false}
+                      disabled={!t.image2}
+                      onCheckedChange={(checked) =>
+                        toggleImageStatus(t.id, "image2Active", !!checked)
+                      }
+                      aria-label={`Toggle preview 2 for ${t.name}`}
+                    />
+                  </td>
                   <td className="p-3">
                     <a
                       href={t.demoUrl}
@@ -697,7 +916,7 @@ export default function ThemesPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-gray-500">
+                <td colSpan={10} className="p-8 text-center text-gray-500">
                   {hasActiveFilters
                     ? "No themes found matching your filters"
                     : "No themes available. Click 'Add Theme' to create one."}
@@ -811,6 +1030,18 @@ export default function ThemesPage() {
                   setAddData({ ...addData, image: e.target.files[0] })
                 }
               />
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="add-image-active"
+                  checked={addData.imageActive}
+                  onCheckedChange={(checked) =>
+                    setAddData({ ...addData, imageActive: !!checked })
+                  }
+                />
+                <Label htmlFor="add-image-active" className="text-sm cursor-pointer">
+                  Tampilkan Preview 1 di galeri
+                </Label>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -824,6 +1055,18 @@ export default function ThemesPage() {
                   setAddData({ ...addData, image2: e.target.files[0] })
                 }
               />
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="add-image2-active"
+                  checked={addData.image2Active}
+                  onCheckedChange={(checked) =>
+                    setAddData({ ...addData, image2Active: !!checked })
+                  }
+                />
+                <Label htmlFor="add-image2-active" className="text-sm cursor-pointer">
+                  Tampilkan Preview 2 di hero
+                </Label>
+              </div>
             </div>
 
             <Button onClick={createTheme} className="w-full">
@@ -941,6 +1184,19 @@ export default function ThemesPage() {
               <p className="text-xs text-gray-500">
                 Leave empty to keep current preview 1
               </p>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="edit-image-active"
+                  checked={editData.imageActive !== false}
+                  disabled={!editData.image && !(editData.image instanceof File)}
+                  onCheckedChange={(checked) =>
+                    setEditData({ ...editData, imageActive: !!checked })
+                  }
+                />
+                <Label htmlFor="edit-image-active" className="text-sm cursor-pointer">
+                  Tampilkan Preview 1 di galeri
+                </Label>
+              </div>
             </div>
 
             {editData.image2 && typeof editData.image2 === "string" && (
@@ -968,6 +1224,21 @@ export default function ThemesPage() {
               <p className="text-xs text-gray-500">
                 Leave empty to keep current preview 2
               </p>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="edit-image2-active"
+                  checked={editData.image2Active !== false}
+                  disabled={
+                    !editData.image2 && !(editData.image2 instanceof File)
+                  }
+                  onCheckedChange={(checked) =>
+                    setEditData({ ...editData, image2Active: !!checked })
+                  }
+                />
+                <Label htmlFor="edit-image2-active" className="text-sm cursor-pointer">
+                  Tampilkan Preview 2 di hero
+                </Label>
+              </div>
             </div>
 
             <Button onClick={updateTheme} className="w-full">
@@ -1172,6 +1443,77 @@ export default function ThemesPage() {
               disabled={bulkLoading || bulkPreviewCount === 0}
             >
               {bulkLoading ? "Updating..." : "Apply Price Update"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---------------- ORDER MODAL ---------------- */}
+      <Dialog open={orderModal} onOpenChange={setOrderModal}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Atur Urutan Tema per Kategori</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Kategori</Label>
+              <Select value={orderCategoryId} onValueChange={setOrderCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat: any) => (
+                    <SelectItem key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Seret tema untuk mengatur urutan. Tema di atas tampil lebih dulu di galeri.
+            </p>
+
+            {orderedThemeIds.length > 0 ? (
+              <DndContext
+                sensors={orderSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleOrderDragEnd}
+              >
+                <SortableContext
+                  items={orderedThemeIds}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2 border rounded-lg p-2">
+                    {orderedThemeIds.map((themeId, index) => {
+                      const theme = themes.find((t: any) => t.id === themeId);
+                      if (!theme) return null;
+                      return (
+                        <SortableThemeRow
+                          key={themeId}
+                          themeId={themeId}
+                          theme={theme}
+                          index={index}
+                        />
+                      );
+                    })}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-6">
+                Tidak ada tema di kategori ini.
+              </p>
+            )}
+
+            <Button
+              onClick={saveThemeOrder}
+              className="w-full"
+              disabled={orderLoading || orderedThemeIds.length === 0}
+            >
+              {orderLoading ? "Menyimpan..." : "Simpan Urutan"}
             </Button>
           </div>
         </DialogContent>

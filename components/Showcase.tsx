@@ -24,6 +24,7 @@ import {
 interface Category {
   id: number;
   name: string;
+  priority?: number;
 }
 
 interface Tag {
@@ -38,6 +39,7 @@ interface Theme {
   name: string;
   price: number;
   image: string | null;
+  imageActive?: boolean;
   demoUrl: string;
   categories: Category[];
   tags: Tag[];
@@ -83,7 +85,11 @@ export default function Showcase() {
           setShowPrice(settingsData.showPrice);
         }
 
-        setThemes(themesData.data || []);
+        setThemes(
+          (themesData.data || []).filter(
+            (t: Theme) => t.image && t.imageActive !== false
+          )
+        );
 
         const categoryNames = categoriesData.map((cat: Category) => cat.name);
         setCategories(categoryNames);
@@ -100,10 +106,17 @@ export default function Showcase() {
     fetchData();
   }, []);
 
-  // Filter themes
-  const filteredThemes = themes.filter((t) =>
-    t.categories.some((cat) => cat.name === activeCategory),
-  );
+  // Filter and sort themes by per-category priority
+  const filteredThemes = themes
+    .filter((t) => t.categories.some((cat) => cat.name === activeCategory))
+    .sort((a, b) => {
+      const catA = a.categories.find((cat) => cat.name === activeCategory);
+      const catB = b.categories.find((cat) => cat.name === activeCategory);
+      const priorityA = catA?.priority ?? 0;
+      const priorityB = catB?.priority ?? 0;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return b.id - a.id;
+    });
 
   const { scrollYProgress } = useScroll({
     target: ref,

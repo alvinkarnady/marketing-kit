@@ -32,7 +32,10 @@ export async function GET(
     // Transform data
     const transformedTheme = {
       ...theme,
-      categories: theme.categories.map((tc) => tc.category),
+      categories: theme.categories.map((tc) => ({
+        ...tc.category,
+        priority: tc.priority,
+      })),
       tags: theme.tags.map((tt) => tt.tag),
     };
 
@@ -58,6 +61,8 @@ export async function PUT(
     const image2File = form.get("image2") as File | null;
     const keepExistingImage = form.get("keepExistingImage") === "true";
     const keepExistingImage2 = form.get("keepExistingImage2") === "true";
+    const imageActiveRaw = form.get("imageActive");
+    const image2ActiveRaw = form.get("image2Active");
 
     // Get multiple category IDs
     const categoryIdsRaw = form.get("categoryIds") as string;
@@ -137,6 +142,45 @@ export async function PUT(
       image2Path = null;
     }
 
+    let imageActive =
+      imageActiveRaw !== null
+        ? imageActiveRaw === "true"
+        : existingTheme.imageActive;
+    let image2Active =
+      image2ActiveRaw !== null
+        ? image2ActiveRaw === "true"
+        : existingTheme.image2Active;
+
+    if (!imagePath) imageActive = false;
+    if (!image2Path) image2Active = false;
+
+    // Preserve per-category priority when updating category links
+    const existingLinks = await prisma.themeCategory.findMany({
+      where: { themeId: Number(id) },
+    });
+    const priorityByCategory = new Map(
+      existingLinks.map((l) => [l.categoryId, l.priority])
+    );
+
+    const categoryCreates = await Promise.all(
+      categoryIds.map(async (categoryId) => {
+        if (priorityByCategory.has(categoryId)) {
+          return {
+            categoryId,
+            priority: priorityByCategory.get(categoryId)!,
+          };
+        }
+        const max = await prisma.themeCategory.aggregate({
+          where: { categoryId },
+          _max: { priority: true },
+        });
+        return {
+          categoryId,
+          priority: (max._max.priority ?? -1) + 1,
+        };
+      })
+    );
+
     // Update theme
     const updated = await prisma.theme.update({
       where: { id: Number(id) },
@@ -146,12 +190,12 @@ export async function PUT(
         demoUrl,
         image: imagePath,
         image2: image2Path,
+        imageActive,
+        image2Active,
         // Replace all categories
         categories: {
           deleteMany: {},
-          create: categoryIds.map((categoryId) => ({
-            categoryId,
-          })),
+          create: categoryCreates,
         },
         // Replace all tags
         tags: {
