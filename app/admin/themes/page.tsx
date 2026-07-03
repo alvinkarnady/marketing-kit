@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, FolderKanban, X, Tag } from "lucide-react";
+import { Search, Filter, FolderKanban, X, Tag, DollarSign } from "lucide-react";
+
+type BulkScope = "selected" | "category" | "all";
+type BulkMode = "fixed" | "percentage" | "amount";
+type BulkDirection = "increase" | "decrease";
 
 export default function ThemesPage() {
   const router = useRouter();
@@ -52,6 +56,16 @@ export default function ThemesPage() {
 
   // THEME SETTINGS
   const [showPrice, setShowPrice] = useState(true);
+
+  // BULK PRICE UPDATE
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkModal, setBulkModal] = useState(false);
+  const [bulkScope, setBulkScope] = useState<BulkScope>("selected");
+  const [bulkMode, setBulkMode] = useState<BulkMode>("fixed");
+  const [bulkValue, setBulkValue] = useState("");
+  const [bulkDirection, setBulkDirection] = useState<BulkDirection>("increase");
+  const [bulkCategoryId, setBulkCategoryId] = useState("");
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   // LOAD DATA
   const loadData = useCallback(async () => {
@@ -99,6 +113,98 @@ export default function ThemesPage() {
 
     return matchesSearch && matchesCategory;
   });
+
+  const filteredIds = filteredThemes.map((t: any) => t.id);
+  const allFilteredSelected =
+    filteredIds.length > 0 &&
+    filteredIds.every((id: number) => selectedIds.includes(id));
+
+  const bulkPreviewCount = useMemo(() => {
+    if (bulkScope === "selected") return selectedIds.length;
+    if (bulkScope === "category") {
+      if (!bulkCategoryId) return 0;
+      return themes.filter((t: any) =>
+        t.categories.some((c: any) => c.id === Number(bulkCategoryId))
+      ).length;
+    }
+    return themes.length;
+  }, [bulkScope, selectedIds, bulkCategoryId, themes]);
+
+  const toggleSelectTheme = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllFiltered = () => {
+    if (allFilteredSelected) {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !filteredIds.includes(id))
+      );
+    } else {
+      setSelectedIds((prev) => [...new Set([...prev, ...filteredIds])]);
+    }
+  };
+
+  const openBulkModal = () => {
+    setBulkScope(selectedIds.length > 0 ? "selected" : "all");
+    setBulkMode("fixed");
+    setBulkValue("");
+    setBulkDirection("increase");
+    setBulkCategoryId(categories[0] ? String(categories[0].id) : "");
+    setBulkModal(true);
+  };
+
+  const applyBulkPrice = async () => {
+    const value = Number(bulkValue);
+    if (!bulkValue || isNaN(value) || value < 0) {
+      alert("Please enter a valid positive value");
+      return;
+    }
+
+    if (bulkScope === "selected" && selectedIds.length === 0) {
+      alert("Please select at least one theme");
+      return;
+    }
+
+    if (bulkScope === "category" && !bulkCategoryId) {
+      alert("Please select a category");
+      return;
+    }
+
+    setBulkLoading(true);
+    try {
+      const res = await fetch("/api/themes/bulk-price", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scope: bulkScope,
+          themeIds: bulkScope === "selected" ? selectedIds : undefined,
+          categoryId:
+            bulkScope === "category" ? Number(bulkCategoryId) : undefined,
+          mode: bulkMode,
+          value,
+          direction: bulkMode === "fixed" ? undefined : bulkDirection,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to update prices");
+        return;
+      }
+
+      alert(`Successfully updated ${data.updated} theme(s)`);
+      setBulkModal(false);
+      setSelectedIds([]);
+      loadData();
+    } catch (err) {
+      console.error("Bulk price update failed:", err);
+      alert("Failed to update prices");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
   // TOGGLE CATEGORY (ADD)
   const toggleAddCategory = (categoryId: number) => {
@@ -213,6 +319,8 @@ export default function ThemesPage() {
 
     if (editData.image instanceof File) {
       fd.append("image", editData.image);
+    } else {
+      fd.append("keepExistingImage", "true");
     }
 
     await fetch(`/api/themes/${editData.id}`, {
@@ -352,9 +460,31 @@ export default function ThemesPage() {
             </Select>
           </div>
 
-          {/* Add Theme Button */}
+          {/* Bulk Update & Add Theme Buttons */}
+          <Button variant="outline" onClick={openBulkModal} className="gap-2">
+            <DollarSign size={18} />
+            Bulk Update Price
+          </Button>
           <Button onClick={() => setAddModal(true)}>Add Theme</Button>
         </div>
+
+        {/* Selection badge */}
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full">
+              {selectedIds.length} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedIds([])}
+              className="gap-1 text-gray-600 hover:text-gray-900"
+            >
+              <X size={14} />
+              Clear selection
+            </Button>
+          </div>
+        )}
 
         {/* Active Filters & Clear Button */}
         {hasActiveFilters && (
@@ -398,6 +528,13 @@ export default function ThemesPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
+              <th className="p-3 w-10">
+                <Checkbox
+                  checked={allFilteredSelected}
+                  onCheckedChange={toggleSelectAllFiltered}
+                  aria-label="Select all filtered themes"
+                />
+              </th>
               <th className="p-3 text-left text-sm font-semibold">Image</th>
               <th className="p-3 text-left text-sm font-semibold">Name</th>
               <th className="p-3 text-left text-sm font-semibold">Price</th>
@@ -414,6 +551,13 @@ export default function ThemesPage() {
             {filteredThemes.length > 0 ? (
               filteredThemes.map((t: any) => (
                 <tr key={t.id} className="border-b hover:bg-gray-50">
+                  <td className="p-3">
+                    <Checkbox
+                      checked={selectedIds.includes(t.id)}
+                      onCheckedChange={() => toggleSelectTheme(t.id)}
+                      aria-label={`Select ${t.name}`}
+                    />
+                  </td>
                   <td className="p-3">
                     {t.image ? (
                       <img
@@ -489,7 +633,7 @@ export default function ThemesPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500">
+                <td colSpan={8} className="p-8 text-center text-gray-500">
                   {hasActiveFilters
                     ? "No themes found matching your filters"
                     : "No themes available. Click 'Add Theme' to create one."}
@@ -718,6 +862,206 @@ export default function ThemesPage() {
 
             <Button onClick={updateTheme} className="w-full">
               Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---------------- BULK PRICE MODAL ---------------- */}
+      <Dialog open={bulkModal} onOpenChange={setBulkModal}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bulk Update Price</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            {/* Scope */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Scope</Label>
+              <div className="space-y-2">
+                <label
+                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${
+                    bulkScope === "selected" ? "border-blue-500 bg-blue-50" : ""
+                  } ${selectedIds.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="bulkScope"
+                    checked={bulkScope === "selected"}
+                    disabled={selectedIds.length === 0}
+                    onChange={() => setBulkScope("selected")}
+                  />
+                  <span className="text-sm">
+                    Selected themes ({selectedIds.length})
+                  </span>
+                </label>
+                <label
+                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${
+                    bulkScope === "category" ? "border-blue-500 bg-blue-50" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="bulkScope"
+                    checked={bulkScope === "category"}
+                    onChange={() => setBulkScope("category")}
+                  />
+                  <span className="text-sm">By category</span>
+                </label>
+                {bulkScope === "category" && (
+                  <Select
+                    value={bulkCategoryId}
+                    onValueChange={setBulkCategoryId}
+                  >
+                    <SelectTrigger className="ml-6">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat: any) => (
+                        <SelectItem key={cat.id} value={String(cat.id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <label
+                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${
+                    bulkScope === "all" ? "border-blue-500 bg-blue-50" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="bulkScope"
+                    checked={bulkScope === "all"}
+                    onChange={() => setBulkScope("all")}
+                  />
+                  <span className="text-sm">All themes ({themes.length})</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Mode */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Price adjustment</Label>
+              <div className="space-y-2">
+                <label
+                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${
+                    bulkMode === "fixed" ? "border-blue-500 bg-blue-50" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="bulkMode"
+                    checked={bulkMode === "fixed"}
+                    onChange={() => setBulkMode("fixed")}
+                  />
+                  <span className="text-sm">Set fixed price</span>
+                </label>
+                <label
+                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${
+                    bulkMode === "percentage"
+                      ? "border-blue-500 bg-blue-50"
+                      : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="bulkMode"
+                    checked={bulkMode === "percentage"}
+                    onChange={() => setBulkMode("percentage")}
+                  />
+                  <span className="text-sm">Adjust by percentage</span>
+                </label>
+                <label
+                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${
+                    bulkMode === "amount" ? "border-blue-500 bg-blue-50" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="bulkMode"
+                    checked={bulkMode === "amount"}
+                    onChange={() => setBulkMode("amount")}
+                  />
+                  <span className="text-sm">Adjust by amount</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Direction (for percentage/amount) */}
+            {bulkMode !== "fixed" && (
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Direction</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={
+                      bulkDirection === "increase" ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setBulkDirection("increase")}
+                  >
+                    Increase
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      bulkDirection === "decrease" ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setBulkDirection("decrease")}
+                  >
+                    Decrease
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Value */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                {bulkMode === "fixed"
+                  ? "New price (Rp)"
+                  : bulkMode === "percentage"
+                    ? "Percentage (%)"
+                    : "Amount (Rp)"}
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                placeholder={
+                  bulkMode === "fixed"
+                    ? "e.g. 450000"
+                    : bulkMode === "percentage"
+                      ? "e.g. 10"
+                      : "e.g. 50000"
+                }
+                value={bulkValue}
+                onChange={(e) => setBulkValue(e.target.value)}
+              />
+            </div>
+
+            {/* Preview */}
+            <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+              {bulkPreviewCount > 0 ? (
+                <span>
+                  <strong>{bulkPreviewCount}</strong> theme
+                  {bulkPreviewCount !== 1 ? "s" : ""} will be updated
+                </span>
+              ) : (
+                <span className="text-amber-600">
+                  No themes match the selected scope
+                </span>
+              )}
+            </div>
+
+            <Button
+              onClick={applyBulkPrice}
+              className="w-full"
+              disabled={bulkLoading || bulkPreviewCount === 0}
+            >
+              {bulkLoading ? "Updating..." : "Apply Price Update"}
             </Button>
           </div>
         </DialogContent>
