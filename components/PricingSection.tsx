@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Icon mapping
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, typeof Star> = {
   Star,
   Crown,
   Sparkles,
@@ -21,6 +20,12 @@ const iconMap: Record<string, any> = {
   Award,
   Heart,
 };
+
+const GOLD_CTA =
+  "block w-full text-center py-3.5 rounded-full font-semibold text-[#3b2a1a] bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] shadow-lg shadow-amber-200/60 hover:shadow-xl hover:shadow-amber-200/80 transition-shadow";
+
+const OUTLINE_CTA =
+  "block w-full text-center py-3.5 rounded-full font-semibold border-2 border-amber-300 text-[#3b2a1a] bg-white/60 hover:bg-amber-50 hover:border-amber-400 transition-colors";
 
 interface PricingPlan {
   id: number;
@@ -45,22 +50,17 @@ interface PricingPlan {
 export default function PricingSection() {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState("6281248406898");
   const [showPrice, setShowPrice] = useState(true);
 
-  // Fetch pricing plans and settings
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
-
-        // Fetch plans
         const resPlans = await fetch("/api/pricing?public=true");
         const plansData = await resPlans.json();
         setPlans(plansData || []);
 
-        // Fetch settings
         const resSettings = await fetch("/api/pricing/settings");
         const settingsData = await resSettings.json();
         setWhatsappNumber(settingsData.whatsappNumber || "6281248406898");
@@ -85,7 +85,7 @@ export default function PricingSection() {
         plan.name
       }" seharga Rp ${price?.toLocaleString("id-ID")}. Bisa info lebih lanjut?`;
     return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-      message
+      message,
     )}`;
   };
 
@@ -93,12 +93,10 @@ export default function PricingSection() {
     return iconMap[iconName] || Star;
   };
 
-  // Don't render if no plans
   if (!loading && plans.length === 0) {
     return null;
   }
 
-  // Determine grid columns based on number of plans
   const getGridClass = () => {
     if (plans.length === 1) return "grid-cols-1 max-w-md mx-auto";
     if (plans.length === 2)
@@ -109,34 +107,12 @@ export default function PricingSection() {
   return (
     <section
       id="pricing"
-      className="relative py-28 px-6 bg-gradient-to-b from-white via-amber-50/30 to-white overflow-hidden"
+      className="relative py-20 md:py-28 px-6 bg-gradient-to-b from-white via-amber-50/40 to-white overflow-hidden text-[#3b2a1a]"
     >
-      {/* Animated background elements */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.1, 0.2, 0.1],
-        }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="absolute top-20 left-0 w-96 h-96 bg-gradient-to-br from-amber-200/30 to-yellow-300/20 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.15, 0.25, 0.15],
-        }}
-        transition={{ duration: 12, repeat: Infinity, delay: 2 }}
-        className="absolute bottom-20 right-0 w-96 h-96 bg-gradient-to-tl from-yellow-200/20 to-amber-300/30 rounded-full blur-3xl"
-      />
+      <div className="absolute top-[-10%] right-[-5%] w-[420px] h-[420px] bg-gradient-to-br from-amber-200/25 to-yellow-300/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[420px] h-[420px] bg-gradient-to-tr from-amber-300/15 to-yellow-200/25 rounded-full blur-3xl pointer-events-none" />
 
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="max-w-7xl mx-auto text-center relative z-10"
-      >
-        {/* Badge */}
+      <div className="max-w-7xl mx-auto text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -144,248 +120,156 @@ export default function PricingSection() {
           viewport={{ once: true }}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 mb-6"
         >
-          <Zap className="w-4 h-4 text-amber-600" />
-          <span className="text-xs md:text-sm font-medium text-amber-800">
+          <Zap className="w-4 h-4 text-[#b38b00]" />
+          <span className="text-xs sm:text-sm font-medium text-[#7a5c2e]">
             Paket Terjangkau
           </span>
         </motion.div>
 
-        {/* Heading */}
-        <h2 className="text-3xl md:text-6xl font-bold mb-6">
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight"
+        >
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#b38b00]">
             Pilih Paket
           </span>
           <br />
           <span className="text-[#3b2a1a]">Undanganmu</span>
-        </h2>
+        </motion.h2>
 
-        <p className="text-[#6b4e2f]/80 mb-16 max-w-2xl mx-auto text-sm md:text-lg">
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-[#6b5b45] mb-12 md:mb-16 max-w-2xl mx-auto text-sm sm:text-base md:text-lg"
+        >
           Sesuaikan kebutuhanmu — mulai dari paket sederhana hingga desain
           eksklusif dengan fitur premium.
-        </p>
+        </motion.p>
 
-        {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-20">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-600 border-r-transparent"></div>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-600 border-r-transparent" />
           </div>
         )}
 
-        {/* Pricing Cards - CENTERED GRID */}
         {!loading && plans.length > 0 && (
-          <div className={`grid ${getGridClass()} gap-8 items-stretch`}>
+          <div className={`grid ${getGridClass()} gap-6 md:gap-8 items-stretch`}>
             {plans.map((plan, index) => {
               const Icon = getIconComponent(plan.icon);
-              const isHovered = hoveredIndex === index;
+              const isHighlight = plan.isHighlight || plan.isPopular;
 
               return (
                 <motion.div
                   key={plan.id}
-                  initial={{ opacity: 0, y: 50 }}
+                  initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.2, duration: 0.6 }}
+                  transition={{ delay: index * 0.1, duration: 0.6 }}
                   viewport={{ once: true }}
-                  onHoverStart={() => setHoveredIndex(index)}
-                  onHoverEnd={() => setHoveredIndex(null)}
-                  whileHover={{ y: -12, scale: 1.02 }}
-                  className={`relative p-8 rounded-3xl border-2 transition-all duration-500 ${
-                    plan.isHighlight
-                      ? `bg-gradient-to-br ${plan.gradient} text-white border-transparent shadow-2xl scale-105 md:scale-110`
-                      : "bg-white/80 backdrop-blur-sm border-amber-100 shadow-lg hover:shadow-xl"
+                  whileHover={{ y: -4 }}
+                  className={`relative p-6 md:p-8 rounded-2xl border transition-all duration-300 bg-white shadow-md shadow-amber-100/50 ${
+                    isHighlight
+                      ? "border-amber-300 ring-1 ring-amber-200/80 bg-amber-50/30"
+                      : "border-amber-100"
                   }`}
                 >
-                  {/* Popular Badge */}
                   {plan.isPopular && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}
-                      className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1"
-                    >
-                      <Crown size={14} />
-                      PALING POPULER
-                    </motion.div>
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-100 text-[#7a5c2e] border border-amber-200 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap">
+                      <Crown size={13} className="text-[#b38b00]" />
+                      Paling Populer
+                    </div>
                   )}
 
-                  {/* Discount Badge */}
                   {plan.hasDiscount && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg"
-                    >
-                      DISKON!
-                    </motion.div>
+                    <div className="absolute -top-2 -right-2 bg-amber-200/90 text-[#7a5c2e] text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-300">
+                      Diskon
+                    </div>
                   )}
 
-                  {/* Icon */}
-                  <motion.div
-                    animate={
-                      isHovered
-                        ? { rotate: 360, scale: 1.1 }
-                        : { rotate: 0, scale: 1 }
-                    }
-                    transition={{ duration: 0.6 }}
-                    className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 shadow-lg ${
-                      plan.isHighlight
-                        ? "bg-white/20 backdrop-blur-sm"
-                        : `bg-gradient-to-br ${plan.gradient}`
-                    }`}
-                  >
-                    <Icon
-                      className={`w-8 h-8 ${
-                        plan.isHighlight ? "text-white" : "text-white"
-                      }`}
-                    />
-                  </motion.div>
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-100 mb-5">
+                    <Icon className="w-6 h-6 text-[#b38b00]" />
+                  </div>
 
-                  {/* Plan Name */}
-                  <h3
-                    className={`text-3xl font-bold mb-2 ${
-                      plan.isHighlight ? "text-white" : "text-[#3b2a1a]"
-                    }`}
-                  >
+                  <h3 className="text-2xl font-bold mb-1 text-[#3b2a1a]">
                     {plan.name}
                   </h3>
-                  <p
-                    className={`text-sm mb-6 ${
-                      plan.isHighlight ? "text-white/90" : "text-[#6b4e2f]/70"
-                    }`}
-                  >
-                    {plan.subtitle}
-                  </p>
+                  <p className="text-sm mb-6 text-[#6b5b45]">{plan.subtitle}</p>
 
-                  {/* Price */}
                   {showPrice && (
-                    <div className="mb-8">
+                    <div className="mb-6">
                       {plan.hasDiscount ? (
                         <>
-                          <div className="flex items-baseline justify-center gap-1 mb-1">
-                            <span
-                              className={`text-2xl font-semibold line-through opacity-60 ${
-                                plan.isHighlight
-                                  ? "text-white/70"
-                                  : "text-[#6b4e2f]/50"
-                              }`}
-                            >
-                              Rp {plan.originalPrice?.toLocaleString("id-ID")}
-                            </span>
-                          </div>
+                          <p className="text-sm line-through text-[#6b5b45]/50 mb-1">
+                            Rp {plan.originalPrice?.toLocaleString("id-ID")}
+                          </p>
                           <div className="flex items-baseline justify-center gap-1">
-                            <span
-                              className={`text-2xl font-semibold ${
-                                plan.isHighlight
-                                  ? "text-white/90"
-                                  : "text-purple-600"
-                              }`}
-                            >
+                            <span className="text-lg font-semibold text-[#6b5b45]">
                               Rp
                             </span>
-                            <motion.span
-                              animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
-                              className={`text-5xl font-bold ${
-                                plan.isHighlight
-                                  ? "text-white"
-                                  : "text-purple-600"
-                              }`}
-                            >
+                            <span className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
                               {plan.currentPrice?.toLocaleString("id-ID")}
-                            </motion.span>
+                            </span>
                           </div>
                         </>
                       ) : (
                         <div className="flex items-baseline justify-center gap-1">
-                          <span
-                            className={`text-2xl font-semibold ${
-                              plan.isHighlight
-                                ? "text-white/90"
-                                : "text-[#6b4e2f]"
-                            }`}
-                          >
+                          <span className="text-lg font-semibold text-[#6b5b45]">
                             Rp
                           </span>
-                          <motion.span
-                            animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
-                            className={`text-5xl font-bold ${
-                              plan.isHighlight
-                                ? "text-white"
-                                : "bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]"
-                            }`}
-                          >
+                          <span className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4af37] to-[#b38b00]">
                             {plan.price.toLocaleString("id-ID")}
-                          </motion.span>
+                          </span>
                         </div>
                       )}
-                      <p
-                        className={`text-sm mt-1 ${
-                          plan.isHighlight ? "text-white/80" : "text-[#6b4e2f]/60"
-                        }`}
-                      >
+                      <p className="text-sm mt-1 text-[#6b5b45]/70">
                         {plan.period}
                       </p>
                     </div>
                   )}
 
-                  {/* Features List */}
-                  <ul className="space-y-4 mb-8 text-left">
+                  <ul className="space-y-3 mb-8 text-left">
                     {plan.features.map((feat, i) => (
-                      <motion.li
+                      <li
                         key={i}
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 * i }}
-                        viewport={{ once: true }}
-                        className={`flex items-start gap-3 ${
-                          plan.isHighlight ? "text-white" : "text-[#6b4e2f]"
-                        }`}
+                        className="flex items-start gap-2.5 text-[#6b5b45]"
                       >
                         <CheckCircle2
-                          size={20}
-                          className={`flex-shrink-0 mt-0.5 ${
-                            plan.isHighlight ? "text-white" : "text-amber-500"
-                          }`}
+                          size={18}
+                          className="shrink-0 mt-0.5 text-amber-500"
                         />
-                        <span className="text-sm font-medium">{feat}</span>
-                      </motion.li>
+                        <span className="text-sm">{feat}</span>
+                      </li>
                     ))}
                   </ul>
 
-                  {/* CTA Button */}
                   <motion.a
                     href={getWhatsAppLink(plan)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`block w-full text-center py-4 rounded-xl font-semibold transition-all shadow-lg ${plan.buttonStyle}`}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={isHighlight ? GOLD_CTA : OUTLINE_CTA}
                   >
                     Pesan Sekarang
                   </motion.a>
-
-                  {/* Glow effect on hover */}
-                  {!plan.isHighlight && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: isHovered ? 1 : 0 }}
-                      className="absolute -inset-1 bg-gradient-to-r from-amber-400 to-yellow-500 opacity-20 blur-xl rounded-3xl -z-10"
-                    />
-                  )}
                 </motion.div>
               );
             })}
           </div>
         )}
 
-        {/* Bottom Note */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.4 }}
           viewport={{ once: true }}
-          className="mt-16 text-center"
+          className="mt-12 md:mt-16 text-center"
         >
-          <p className="text-[#6b4e2f]/70 mb-6">
+          <p className="text-[#6b5b45] mb-6 text-sm md:text-base">
             Butuh paket custom atau konsultasi? Hubungi kami untuk penawaran
             spesial!
           </p>
@@ -393,15 +277,15 @@ export default function PricingSection() {
             href={`https://wa.me/${whatsappNumber}?text=Halo,%20saya%20ingin%20konsultasi%20paket%20custom`}
             target="_blank"
             rel="noopener noreferrer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white border-2 border-amber-200 text-amber-800 rounded-xl font-semibold hover:border-amber-300 hover:bg-amber-50 transition-all shadow-md"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold border-2 border-amber-300 text-[#3b2a1a] bg-white/60 hover:bg-amber-50 hover:border-amber-400 transition-colors"
           >
-            <Sparkles size={20} />
+            <Sparkles size={18} className="text-[#b38b00]" />
             Konsultasi Paket Custom
           </motion.a>
         </motion.div>
-      </motion.div>
+      </div>
     </section>
   );
 }
