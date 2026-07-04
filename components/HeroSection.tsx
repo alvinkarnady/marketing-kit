@@ -1,8 +1,15 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import { ArrowRight, ArrowDown, Star, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface HeroTheme {
   id: number;
@@ -10,63 +17,111 @@ interface HeroTheme {
   image: string | null;
 }
 
-// Split items into n columns round-robin
-function splitColumns<T>(items: T[], count: number): T[][] {
-  const cols: T[][] = Array.from({ length: count }, () => []);
-  items.forEach((item, i) => cols[i % count].push(item));
+// Deterministic shuffle (stable across SSR/hydration)
+function seededShuffle<T>(items: T[], seed: number): T[] {
+  const arr = [...items];
+  let s = seed;
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const j = s % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function splitColumnPools(pool: HeroTheme[]): HeroTheme[][] {
+  const shuffled = seededShuffle(
+    pool,
+    pool.reduce((sum, t) => sum + t.id, 0),
+  );
+  const cols: HeroTheme[][] = [[], [], []];
+  shuffled.forEach((item, i) => cols[i % 3].push(item));
   return cols;
 }
 
-// Keyframes with smooth holds: the column glides, eases to a stop, then continues
-function buildPausedKeyframes(direction: "up" | "down") {
-  const stops = ["0%", "-14%", "-14%", "-27%", "-27%", "-38%", "-38%", "-50%"];
-  const frames = direction === "up" ? stops : [...stops].reverse();
-  // Uneven timing: longer segments are travel, equal pairs are pauses
-  const times = [0, 0.16, 0.28, 0.44, 0.55, 0.72, 0.84, 1];
-  return { frames, times };
+function buildColumnLoop(
+  pool: HeroTheme[],
+  columnIndex: number,
+  halfSize: number,
+): HeroTheme[] {
+  if (pool.length === 0) return [];
+
+  const fillHalf = (seed: number, avoidId?: number): HeroTheme[] => {
+    const half: HeroTheme[] = [];
+    let attempt = 0;
+
+    while (half.length < halfSize) {
+      const shuffled = seededShuffle(pool, seed + attempt);
+      for (const item of shuffled) {
+        const lastId = half.length > 0 ? half[half.length - 1].id : avoidId;
+        if (lastId === item.id) continue;
+        half.push(item);
+        if (half.length >= halfSize) break;
+      }
+
+      attempt++;
+      if (attempt > 24) {
+        const fallback = pool[half.length % pool.length];
+        if (half.length === 0 || half[half.length - 1].id !== fallback.id) {
+          half.push(fallback);
+        } else {
+          half.push(pool[(half.length + 1) % pool.length]);
+        }
+      }
+    }
+
+    return half;
+  };
+
+  const seed = columnIndex * 7919 + pool.reduce((sum, t) => sum + t.id, 0);
+  const first = fillHalf(seed);
+  const second = fillHalf(seed + 500, first[first.length - 1]?.id);
+
+  return [...first, ...second];
 }
+
+function buildMarqueeColumns(pool: HeroTheme[]): HeroTheme[][] {
+  const columnPools = splitColumnPools(pool);
+
+  return columnPools.map((columnPool, i) => {
+    if (columnPool.length === 0) return [];
+    const halfSize = Math.max(4, columnPool.length + 1);
+    return buildColumnLoop(columnPool, i, halfSize);
+  });
+}
+
+const MARQUEE_DURATION = 30;
+const MARQUEE_Y_VALUES = [0, -14, -14, -27, -27, -38, -38, -50];
+const MARQUEE_Y_TIMES = [0, 0.16, 0.28, 0.44, 0.55, 0.72, 0.84, 1];
+const MARQUEE_SCALE = [1, 1, 1.05, 1.05, 1, 1, 1.05, 1.05, 1];
+const MARQUEE_SCALE_TIMES = [
+  0, 0.16, 0.22, 0.28, 0.44, 0.5, 0.55, 0.72, 0.84, 1,
+];
 
 function MarqueeColumn({
   images,
   direction,
-  duration,
-  zoomDelay,
+  yProgress,
+  scaleProgress,
   className = "flex-1",
 }: {
   images: HeroTheme[];
   direction: "up" | "down";
-  duration: number;
-  zoomDelay: number;
+  yProgress: MotionValue<number>;
+  scaleProgress: MotionValue<number>;
   className?: string;
 }) {
-  // Duplicate list so the loop is seamless at -50%
-  const list = [...images, ...images];
-  const { frames, times } = buildPausedKeyframes(direction);
+  const list = images;
+  // Up: 0% → -50%. Down: -50% → 0% (mirrored path, same negative translateY range).
+  const y = useTransform(yProgress, (v) =>
+    direction === "up" ? `${v}%` : `${-50 - v}%`,
+  );
 
   return (
     <div className={`${className} overflow-hidden`}>
       <motion.div
         className="flex flex-col"
-        animate={{
-          y: frames,
-          scale: [1, 1, 1.05, 1.05, 1, 1],
-        }}
-        transition={{
-          y: {
-            duration,
-            times,
-            repeat: Infinity,
-            ease: "easeInOut",
-          },
-          scale: {
-            duration: duration / 2,
-            times: [0, 0.35, 0.45, 0.55, 0.65, 1],
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: zoomDelay,
-          },
-        }}
-        style={{ transformOrigin: "center center" }}
+        style={{ y, scale: scaleProgress, transformOrigin: "center center" }}
       >
         {list.map((theme, i) => (
           <div
@@ -88,6 +143,47 @@ function MarqueeColumn({
         ))}
       </motion.div>
     </div>
+  );
+}
+
+function HeroMarquee({ columns }: { columns: HeroTheme[][] }) {
+  const yProgress = useMotionValue(0);
+  const scaleProgress = useMotionValue(1);
+
+  useEffect(() => {
+    const yControls = animate(yProgress, MARQUEE_Y_VALUES, {
+      duration: MARQUEE_DURATION,
+      times: MARQUEE_Y_TIMES,
+      repeat: Infinity,
+      ease: "easeInOut",
+    });
+    const scaleControls = animate(scaleProgress, MARQUEE_SCALE, {
+      duration: MARQUEE_DURATION,
+      times: MARQUEE_SCALE_TIMES,
+      repeat: Infinity,
+      ease: "easeInOut",
+    });
+
+    return () => {
+      yControls.stop();
+      scaleControls.stop();
+    };
+  }, [yProgress, scaleProgress]);
+
+  return (
+    <>
+      {columns.map((col, i) =>
+        col.length > 0 ? (
+          <MarqueeColumn
+            key={i}
+            images={col}
+            direction={i === 1 ? "down" : "up"}
+            yProgress={yProgress}
+            scaleProgress={scaleProgress}
+          />
+        ) : null,
+      )}
+    </>
   );
 }
 
@@ -115,12 +211,20 @@ export default function HeroSection() {
         const heroPreviewImage = settingsData?.heroPreviewImage === 2 ? 2 : 1;
 
         const withImages = (data.data || [])
-          .filter((t: HeroTheme & { image2?: string | null; imageActive?: boolean; image2Active?: boolean }) => {
-            if (heroPreviewImage === 2) {
-              return t.image2 && t.image2Active !== false;
-            }
-            return t.image && t.imageActive !== false;
-          })
+          .filter(
+            (
+              t: HeroTheme & {
+                image2?: string | null;
+                imageActive?: boolean;
+                image2Active?: boolean;
+              },
+            ) => {
+              if (heroPreviewImage === 2) {
+                return t.image2 && t.image2Active !== false;
+              }
+              return t.image && t.imageActive !== false;
+            },
+          )
           .map((t: HeroTheme & { image2?: string | null }) => ({
             id: t.id,
             name: t.name,
@@ -142,23 +246,18 @@ export default function HeroSection() {
     }
   };
 
-  // Placeholder skeletons keep the marquee alive before data arrives
-  let marqueeItems: HeroTheme[] =
-    themes.length > 0
-      ? themes
-      : Array.from({ length: 9 }, (_, i) => ({
-          id: -(i + 1),
-          name: "placeholder",
-          image: null,
-        }));
+  const columns = useMemo(() => {
+    const pool: HeroTheme[] =
+      themes.length > 0
+        ? themes
+        : Array.from({ length: 9 }, (_, i) => ({
+            id: -(i + 1),
+            name: "placeholder",
+            image: null,
+          }));
 
-  // Repeat items so each column has enough cards for a seamless loop
-  while (marqueeItems.length < 9) {
-    marqueeItems = [...marqueeItems, ...marqueeItems];
-  }
-
-  const columns = splitColumns(marqueeItems, 3);
-  const durations = [28, 34, 24];
+    return buildMarqueeColumns(pool);
+  }, [themes]);
 
   return (
     <section
@@ -288,19 +387,9 @@ export default function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
-          className="relative h-[35vh] md:h-[78vh] flex gap-2.5 md:gap-4 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]"
+          className="relative h-[45vh] md:h-[78vh] flex gap-2.5 md:gap-4 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]"
         >
-          {columns.map((col, i) =>
-            col.length > 0 ? (
-              <MarqueeColumn
-                key={i}
-                images={col}
-                direction={i % 2 === 0 ? "up" : "down"}
-                duration={durations[i % durations.length]}
-                zoomDelay={i * 5}
-              />
-            ) : null,
-          )}
+          <HeroMarquee columns={columns} />
         </motion.div>
       </div>
 
