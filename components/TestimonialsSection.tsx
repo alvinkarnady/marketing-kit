@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
 
 interface Theme {
   id: number;
@@ -24,6 +25,7 @@ export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [sectionRef, sectionInView] = useInView({ threshold: 0.05 });
 
   // Fetch testimonials from API
   useEffect(() => {
@@ -53,24 +55,12 @@ export default function TestimonialsSection() {
   }
 
   return (
-    <section className="relative py-28 overflow-hidden bg-gradient-to-b from-white via-amber-50/30 to-white">
-      {/* Background decorations */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.1, 0.15, 0.1],
-        }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="absolute top-20 left-0 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-yellow-300/20 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.1, 0.2, 0.1],
-        }}
-        transition={{ duration: 12, repeat: Infinity, delay: 2 }}
-        className="absolute bottom-20 right-0 w-96 h-96 bg-gradient-to-tl from-yellow-200/20 to-amber-300/20 rounded-full blur-3xl"
-      />
+    <section
+      ref={sectionRef}
+      className="relative py-28 overflow-hidden bg-gradient-to-b from-white via-amber-50/30 to-white"
+    >
+      <div className="absolute top-20 left-0 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-yellow-300/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-0 w-96 h-96 bg-gradient-to-tl from-yellow-200/20 to-amber-300/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10">
         {/* Header */}
@@ -129,21 +119,23 @@ export default function TestimonialsSection() {
             <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 md:w-32 bg-gradient-to-l from-white via-white to-transparent z-10 pointer-events-none" />
 
             {/* Scrolling Container */}
-            <motion.div
-              className="flex gap-4 md:gap-6"
-              animate={{
-                x: isPaused ? 0 : [0, -1500],
-              }}
-              transition={{
-                x: {
-                  duration: 30,
-                  repeat: Infinity,
-                  ease: "linear",
-                },
-              }}
-              onHoverStart={() => setIsPaused(true)}
-              onHoverEnd={() => setIsPaused(false)}
-            >
+            <div className="overflow-hidden w-full">
+              <motion.div
+                className="flex gap-4 md:gap-6 w-max"
+                animate={{
+                  x:
+                    sectionInView && !isPaused ? [0, -1500] : 0,
+                }}
+                transition={{
+                  x: {
+                    duration: 30,
+                    repeat: sectionInView && !isPaused ? Infinity : 0,
+                    ease: "linear",
+                  },
+                }}
+                onHoverStart={() => setIsPaused(true)}
+                onHoverEnd={() => setIsPaused(false)}
+              >
               {duplicatedTestimonials.map((testimonial, index) => (
                 <motion.div
                   key={`${testimonial.id}-${index}`}
@@ -164,6 +156,9 @@ export default function TestimonialsSection() {
                           <img
                             src={testimonial.image}
                             alt={testimonial.name}
+                            width={96}
+                            height={96}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -223,7 +218,8 @@ export default function TestimonialsSection() {
                   <div className="absolute inset-0 bg-gradient-to-t from-amber-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl pointer-events-none" />
                 </motion.div>
               ))}
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
         )}
 

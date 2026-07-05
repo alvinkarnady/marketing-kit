@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { jsonWithPublicCache } from "@/lib/public-cache";
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
         data: { showPrice: true, heroPreviewImage: 1 },
       });
     }
-    return NextResponse.json(settings);
+    return jsonWithPublicCache(settings);
   } catch (err) {
     console.error("GET THEME SETTINGS ERROR:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

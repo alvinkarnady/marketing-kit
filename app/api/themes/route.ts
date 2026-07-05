@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { jsonWithPublicCache } from "@/lib/public-cache";
 
 async function nextCategoryPriority(categoryId: number) {
   const max = await prisma.themeCategory.aggregate({
@@ -47,7 +48,7 @@ export async function GET() {
       tags: theme.tags.map((tt) => tt.tag),
     }));
 
-    return NextResponse.json({ data: transformedThemes });
+    return jsonWithPublicCache({ data: transformedThemes });
   } catch (err) {
     console.error("GET THEMES ERROR", err);
     return NextResponse.json(

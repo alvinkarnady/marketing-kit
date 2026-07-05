@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { jsonWithPublicCache } from "@/lib/public-cache";
 
 // GET ALL PRICING PLANS
 export async function GET(req: Request) {
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
         };
       });
 
-      return NextResponse.json(transformedPlans);
+      return jsonWithPublicCache(transformedPlans);
     }
 
     // Admin API: all plans

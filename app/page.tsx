@@ -1,29 +1,34 @@
 import Navbar from "../components/Navbar";
 import ContactSection from "../components/ContactSection";
-import GallerySection from "../components/GallerySection";
 import PricingSection from "../components/PricingSection";
 import FooterSection from "@/components/FooterSection";
 import HeroSection from "@/components/HeroSection";
-// import Hero from "@/components/Hero";
-// import HeroLuxury from "@/components/HeroLuxury";
 import Showcase from "@/components/Showcase";
 import AboutSection from "@/components/AboutSection";
 import ServicesSection from "@/components/ServicesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 
 export default function Home() {
   return (
-    <main className="min-h-screen font-poppins">
+    <main className="min-h-screen font-poppins overflow-x-hidden">
       <Navbar />
-      <HeroSection />
-      <Showcase />
-      {/* <HeroLuxury /> */}
-      {/* <Hero />  */}
-      {/* <GallerySection /> */}
-      <TestimonialsSection />
+      <SectionErrorBoundary>
+        <HeroSection />
+      </SectionErrorBoundary>
+      <SectionErrorBoundary>
+        <Showcase />
+      </SectionErrorBoundary>
+      <SectionErrorBoundary>
+        <TestimonialsSection />
+      </SectionErrorBoundary>
       <AboutSection />
-      <ServicesSection />
-      <PricingSection />
+      <SectionErrorBoundary>
+        <ServicesSection />
+      </SectionErrorBoundary>
+      <SectionErrorBoundary>
+        <PricingSection />
+      </SectionErrorBoundary>
       <ContactSection />
       <FooterSection />
     </main>

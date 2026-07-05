@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import { ArrowRight, ArrowDown, Star, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useInView } from "react-intersection-observer";
 
 interface HeroTheme {
   id: number;
@@ -146,11 +147,19 @@ function MarqueeColumn({
   );
 }
 
-function HeroMarquee({ columns }: { columns: HeroTheme[][] }) {
+function HeroMarquee({
+  columns,
+  active = true,
+}: {
+  columns: HeroTheme[][];
+  active?: boolean;
+}) {
   const yProgress = useMotionValue(0);
   const scaleProgress = useMotionValue(1);
 
   useEffect(() => {
+    if (!active) return;
+
     const yControls = animate(yProgress, MARQUEE_Y_VALUES, {
       duration: MARQUEE_DURATION,
       times: MARQUEE_Y_TIMES,
@@ -168,7 +177,7 @@ function HeroMarquee({ columns }: { columns: HeroTheme[][] }) {
       yControls.stop();
       scaleControls.stop();
     };
-  }, [yProgress, scaleProgress]);
+  }, [yProgress, scaleProgress, active]);
 
   return (
     <>
@@ -198,6 +207,7 @@ export default function HeroSection() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   const [themes, setThemes] = useState<HeroTheme[]>([]);
+  const [marqueeRef, marqueeInView] = useInView({ threshold: 0.05 });
 
   useEffect(() => {
     async function fetchThemes() {
@@ -384,12 +394,13 @@ export default function HeroSection() {
 
         {/* ---------------- RIGHT: Vertical marquee ---------------- */}
         <motion.div
+          ref={marqueeRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
           className="relative h-[45vh] md:h-[78vh] flex gap-2.5 md:gap-4 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]"
         >
-          <HeroMarquee columns={columns} />
+          <HeroMarquee columns={columns} active={marqueeInView} />
         </motion.div>
       </div>
 

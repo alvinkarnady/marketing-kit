@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { jsonWithPublicCache } from "@/lib/public-cache";
 
 // GET ALL SERVICES
 export async function GET(req: Request) {
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
         features: service.features as string[],
       }));
 
-      return NextResponse.json(transformedServices);
+      return jsonWithPublicCache(transformedServices);
     }
 
     // Admin API: all services

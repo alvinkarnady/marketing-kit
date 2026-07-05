@@ -155,22 +155,8 @@ export default function Showcase() {
       className="relative py-16 sm:py-20 md:py-28 overflow-hidden bg-gradient-to-b from-white via-amber-50/30 to-white text-[#3b2a1a]"
     >
       {/* Animated background elements */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.1, 0.15, 0.1],
-        }}
-        transition={{ duration: 8, repeat: Infinity }}
-        className="absolute top-20 right-0 w-64 h-64 md:w-96 md:h-96 bg-gradient-to-br from-amber-200/30 to-yellow-300/20 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.1, 0.2, 0.1],
-        }}
-        transition={{ duration: 10, repeat: Infinity, delay: 2 }}
-        className="absolute bottom-20 left-0 w-64 h-64 md:w-96 md:h-96 bg-gradient-to-tl from-amber-300/20 to-yellow-200/30 rounded-full blur-3xl"
-      />
+      <div className="absolute top-20 right-0 w-64 h-64 md:w-96 md:h-96 bg-gradient-to-br from-amber-200/30 to-yellow-300/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-64 h-64 md:w-96 md:h-96 bg-gradient-to-tl from-amber-300/20 to-yellow-200/30 rounded-full blur-3xl pointer-events-none" />
 
       {/* Heading */}
       <motion.div
@@ -229,7 +215,7 @@ export default function Showcase() {
               if (rowCategories.length === 0) return null;
 
               return (
-                <div key={rowIndex} className="overflow-x-auto scrollbar-hide">
+                <div key={rowIndex} className="overflow-x-auto overscroll-x-contain scrollbar-hide -mx-4 px-4">
                   <div className="flex gap-2 pb-1 min-w-max">
                     {rowCategories.map((cat) => {
                       const isActive = activeCategory === cat;
@@ -349,7 +335,7 @@ export default function Showcase() {
 
       {/* LOADING STATE - Skeleton */}
       {loading && (
-        <div className="overflow-x-auto scrollbar-hide px-4 sm:px-6 md:px-12 lg:px-24">
+        <div className="overflow-x-auto overscroll-x-contain scrollbar-hide px-4 sm:px-6 md:px-12 lg:px-24">
           <div className="flex gap-4 sm:gap-6 pb-4 min-w-max">
             {[...Array(6)].map((_, i) => (
               <motion.div
@@ -394,7 +380,7 @@ export default function Showcase() {
       {!loading && filteredThemes.length > 0 && (
         <div className="relative px-4 sm:px-6 md:px-12 lg:px-24 space-y-4 sm:space-y-6">
           {/* Row 1 - Even indexed themes */}
-          <div className="overflow-x-auto scrollbar-hide pb-4">
+          <div className="overflow-x-auto overscroll-x-contain scrollbar-hide pb-4 -mx-4 px-4">
             <div className="flex gap-3 sm:gap-6 md:gap-8 min-w-max">
               <AnimatePresence mode="popLayout">
                 {filteredThemes
@@ -413,7 +399,7 @@ export default function Showcase() {
                       }}
                       onHoverStart={() => setHoveredCard(theme.id)}
                       onHoverEnd={() => setHoveredCard(null)}
-                      className="relative rounded-xl sm:rounded-2xl md:rounded-3xl overflrelative rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-500 bg-white border border-amber-100/50 w-[160px] sm:w-[200px] md:w-[280px] lg:w-[320px] flex-shrink-0ow-hidden group shadow-lg hover:shadow-2xl transition-all duration-500 bg-white border border-amber-100/50 w-[160px] sm:w-[200px] md:w-[280px] lg:w-[320px] flex-shrink-0"
+                      className="relative rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-500 bg-white border border-amber-100/50 w-[160px] sm:w-[200px] md:w-[280px] lg:w-[320px] flex-shrink-0"
                     >
                       {/* Tags from Database */}
                       {theme.tags.length > 0 && (
@@ -568,7 +554,7 @@ export default function Showcase() {
 
           {/* Row 2 - Odd indexed themes */}
           {filteredThemes.filter((_, index) => index % 2 === 1).length > 0 && (
-            <div className="overflow-x-auto scrollbar-hide pb-4">
+            <div className="overflow-x-auto overscroll-x-contain scrollbar-hide pb-4 -mx-4 px-4">
               <div className="flex gap-3 sm:gap-6 md:gap-8 min-w-max">
                 <AnimatePresence mode="popLayout">
                   {filteredThemes

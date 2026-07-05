@@ -109,23 +109,9 @@ export default function AboutSection() {
       id="about"
       className="relative bg-gradient-to-b from-white via-amber-50/20 to-white text-[#3b2a1a] py-28 overflow-hidden"
     >
-      {/* Animated background blobs */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.15, 0.25, 0.15],
-        }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-amber-200/30 to-yellow-300/20 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.1, 0.2, 0.1],
-        }}
-        transition={{ duration: 12, repeat: Infinity, delay: 3 }}
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tl from-yellow-200/20 to-amber-300/30 rounded-full blur-3xl"
-      />
+      {/* Static background blobs */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-amber-200/30 to-yellow-300/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tl from-yellow-200/20 to-amber-300/30 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-6 md:px-12 lg:px-24">
         {/* Stats Section */}

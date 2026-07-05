@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadImage } from "@/lib/upload";
+import { jsonWithPublicCache } from "@/lib/public-cache";
 
 // GET ALL TESTIMONIALS (for admin)
 export async function GET(req: Request) {
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
         take: maxDisplay,
       });
 
-      return NextResponse.json(testimonials);
+      return jsonWithPublicCache(testimonials);
     }
 
     // Admin API: all testimonials
